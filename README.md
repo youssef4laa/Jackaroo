@@ -1,1 +1,3 @@
-# jackaroo
+# Jackaroo
+
+CS401 Project
