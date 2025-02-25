@@ -4,7 +4,7 @@ package model.card;
 import engine.GameManager;
 import engine.board.BoardManager;
 
-public abstract class Card implements GameManager, BoardManager {
+public abstract class Card{
 	private final String name;
 	private final String description;
 	protected BoardManager boardManager;
