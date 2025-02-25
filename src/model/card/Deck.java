@@ -13,14 +13,17 @@ public class Deck {
 	private static ArrayList<Card> cardsPool = new ArrayList<>();
 
 	/**
-	 * 
-	 * @param CARDS_FILE represents name of the csv file
-	 * @param cardsPool  made to store available cards.
+	 *  dynamic initialization of cards_file with default being cards.csv
 	 */
 	static{
 		CARDS_FILE = "cards.csv";
 	}
-
+/**
+ * 
+ * method that loads the cardsPool array, works by reading the CSV file and splitting each line
+ * 	as a string then splits it by the separator ",". It then creates a standard or wild card 
+ * 	based on the length. If the length is unknown an exception is thrown.
+ */
 	public static void loadCardPool(BoardManager boardManager, GameManager gameManager)
 	        throws IOException, IllegalArgumentException {
 	    try (BufferedReader reader = new BufferedReader(new FileReader(CARDS_FILE))) {
@@ -39,7 +42,8 @@ public class Deck {
 	}
 /**
  * 
- * @return
+ * @return ArrayList of Cards, shuffles using collections import then removes & returns first 4 elements.
+ * 
  */
 	public static ArrayList<Card> drawCards(){
 		Collections.shuffle(cardsPool);
@@ -50,7 +54,12 @@ public class Deck {
 		}
 		return cardsPool;
 	}
-
+/** 
+ * Wild & Standard card are essentially the same with differences being switch values.
+ * Method works by assuming correct input (might have to change later to make sure values are correct
+ * then it parses first 2 elements of row, using them as code for the switch and frequency of cards
+ * it then uses each card type's constructor to initialize them into the cardsPool arrayList.
+ */
 	private static void createStandardCard(BoardManager boardManager, GameManager gameManager, String[] row,
 			String line) {
 		int code = Integer.parseInt(row[0]);
