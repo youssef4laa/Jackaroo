@@ -45,7 +45,7 @@ public class Deck {
 
 	/**
 	 * 
-	 * @return ArrayList of Cards, shuffles using collections import then removes &
+	 * @return ArrayList of Cards, shuffles using collections.shuffle removes &
 	 *         returns first 4 elements.
 	 * 
 	 */
@@ -66,6 +66,7 @@ public class Deck {
 	 * them as code for the switch and frequency of cards it then uses each card
 	 * type's constructor to initialize them into the cardsPool arrayList.
 	 */
+	
 	private static void createStandardCard(BoardManager boardManager, GameManager gameManager, String[] row,
 			String line) {
 		int code = Integer.parseInt(row[0]);
