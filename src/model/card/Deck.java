@@ -108,9 +108,12 @@ public class Deck {
 		int code = Integer.parseInt(row[0]);
 		int frequency = Integer.parseInt(row[1]);
 		for (int i = 0; i < frequency; i++) {
+			Wild temporary;
 			switch (code) {
 			case 14:
+				temporary = new Burner(row[3], row[4], boardManager, gameManager);
 			case 15:
+				temporary = new Saver(row[3], row[4], boardManager, gameManager);
 			default:
 				throw new IllegalArgumentException("Invalid Card Code: " + line);
 			}

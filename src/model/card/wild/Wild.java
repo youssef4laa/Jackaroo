@@ -4,7 +4,7 @@ import engine.GameManager;
 import engine.board.BoardManager;
 import model.card.Card;
 
-public class Wild extends Card {
+public abstract class Wild extends Card {
 
 	/**
 	 * @param name         The name of the card (inherited from Card)
