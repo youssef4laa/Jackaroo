@@ -9,7 +9,7 @@ import model.card.wild.*;
 
 public class Deck {
 	private static final String CARDS_FILE;
-	private static ArrayList<Card> cardsPool;
+	private static ArrayList<Card> cardsPool = new ArrayList<>();
 
 	/**
 	 * 
@@ -17,42 +17,29 @@ public class Deck {
 	 * @param cardsPool  made to store available cards.
 	 */
 
-	public Deck(String CARDS_FILE, ArrayList<Card> cardsPool) {
-		super();
-		this.CARDS_FILE = CARDS_FILE;
-		this.cardsPool = cardsPool;
+	static{
+		CARDS_FILE = "cards.csv";
 	}
 
 	public static void loadCardPool(BoardManager boardManager, GameManager gameManager)
 			throws IOException, IllegalArgumentException {
-		BufferedReader reader = null;
-		String line;
-		try {
-			reader = new BufferedReader(new FileReader(CARDS_FILE));
-			while ((line = reader.readLine()) != null) {
-				String[] row = line.split(",");
-				if (row.length == 4) {
-					createStandardCard(boardManager, gameManager, row, line);
-				}
-				if (row.length == 6) {
-					createWildCard(boardManager, gameManager, row, line);
-				} else {
-					throw new IllegalArgumentException("Invalid CSV format: " + line);
-				}
-			}
+		try (BufferedReader reader = new BufferedReader(new FileReader(CARDS_FILE))) {
+		    String line;
+		    while ((line = reader.readLine()) != null) {
+		        String[] row = line.split(",");
+		        if (row.length == 4) {
+		            createStandardCard(boardManager, gameManager, row, line);
+		        } else if (row.length == 6) {
+		            createWildCard(boardManager, gameManager, row, line);
+		        } else {
+		            throw new IllegalArgumentException("Invalid CSV format: " + line);
+		        }
+		    }
 		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				reader.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		    e.printStackTrace();
 		}
 	}
 
-	// String name, String description, int rank, Suit suit, BoardManager
-	// boardManager, GameManager gameManager
 	private static void createStandardCard(BoardManager boardManager, GameManager gameManager, String[] row,
 			String line) {
 		int code = Integer.parseInt(row[0]);
@@ -112,10 +99,12 @@ public class Deck {
 			switch (code) {
 			case 14:
 				temporary = new Burner(row[3], row[4], boardManager, gameManager);
+				break;
 			case 15:
 				temporary = new Saver(row[3], row[4], boardManager, gameManager);
 			default:
 				throw new IllegalArgumentException("Invalid Card Code: " + line);
+				break;
 			}
 
 		}
