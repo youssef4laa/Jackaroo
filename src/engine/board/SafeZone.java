@@ -1,9 +1,8 @@
 package engine.board; // Defines the package where this class belongs
-
 import java.util.ArrayList; // Imports the ArrayList class to use dynamic lists
 import model.Colour; // Imports the Colour class, which associates the safe zone with a player
 import engine.Cell;   // Imports the Cell class, representing individual board cells
-
+//This is a class that represents any Safe Zone on the board.
 public class SafeZone { // Defines the SafeZone class
     // Attributes (Read-Only)
     private final Colour colour; // Stores the colour associated with this SafeZone, immutable

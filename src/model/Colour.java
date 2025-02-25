@@ -1,5 +1,6 @@
 package model;
-public enum Colour {
+//This is an enum that represents the 4 colours of the marbles.
+public enum Colour { //
 RED,
 GREEN,
 BLUE,
