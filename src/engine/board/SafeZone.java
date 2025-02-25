@@ -15,7 +15,7 @@ public class SafeZone { // Defines the SafeZone class
         
         // Initialize 4 SAFE cells
         for (int i = 0; i < 4; i++) { // Loops four times to create 4 cells
-            this.cells.add(new Cell()); // Adds a new Cell object to the cells list
+        	  this.cells.add(new Cell(null, CellType.SAFE, false));  // Adds a new SAFE cell with no marbles that isn't a trap to the list.
         }
     }
 
