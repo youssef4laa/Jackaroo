@@ -58,18 +58,45 @@ public class Deck {
 		int code = Integer.parseInt(row[0]);
 		int frequency = Integer.parseInt(row[1]);
 		for (int i = 0; i < frequency; i++) {
+			Standard temporary;
 			switch (code) {
 			case 0:
-				Standard temporary = new Standard(row[2], row[3], Integer.parseInt(row[4]), Suit.valueOf(row[5]),
+				 temporary = new Standard(row[2], row[3], Integer.parseInt(row[4]), Suit.valueOf(row[5]),
 						boardManager, gameManager);
+				cardsPool.add(temporary);
+				break;
 			case 1:
+				 temporary = new Ace(row[2],row[3],Suit.valueOf(row[5]), boardManager, gameManager);
+				cardsPool.add(temporary);
+				break;
 			case 13:
+				temporary = new King(row[2],row[3],Suit.valueOf(row[5]), boardManager, gameManager);
+				cardsPool.add(temporary);
+				break;
 			case 12:
+				temporary= new Queen(row[2],row[3],Suit.valueOf(row[5]), boardManager, gameManager);
+				cardsPool.add(temporary);
+				break;
 			case 11:
+				temporary= new Jack(row[2],row[3],Suit.valueOf(row[5]), boardManager, gameManager);
+				cardsPool.add(temporary);
+				break;
 			case 4:
+				temporary = new Four(row[2],row[3],Suit.valueOf(row[5]), boardManager, gameManager);
+				cardsPool.add(temporary);
+				break;
 			case 5:
+				temporary = new Five(row[2],row[3],Suit.valueOf(row[5]), boardManager, gameManager);
+				cardsPool.add(temporary);
+				break;
 			case 7:
+				temporary= new Seven(row[2],row[3],Suit.valueOf(row[5]), boardManager, gameManager);
+				cardsPool.add(temporary);
+				break;
 			case 10:
+				temporary = new Ten(row[2],row[3],Suit.valueOf(row[5]), boardManager, gameManager);
+				cardsPool.add(temporary);
+				break;
 			default:
 				throw new IllegalArgumentException("Invalid Card Code: " + line);
 			}
