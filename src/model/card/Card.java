@@ -17,7 +17,6 @@ public abstract class Card implements GameManager, BoardManager {
 	 * @param boardManager interface to be defined later.
 	 * @param gameManager interface to be defined later.
 	 */
-
 	public Card(String name, String description, BoardManager boardManager, GameManager gameManager) {
 		super();
 		this.name = name;

@@ -7,7 +7,12 @@ public class Cell {
 	private Marble marble;
 	private CellType cellType;
 	private boolean trap;
-
+/**
+ * 
+ * @param marble null or occupied by a marble.
+ * @param cellType represents which type of cell this is (NORMAL, SAFE, BASE, ENTRY)
+ * @param trap determines whether a cell is a trap cell or not.
+ */
 	public Cell(Marble marble, CellType cellType, boolean trap) {
 		super();
 		this.marble = marble;
