@@ -23,10 +23,11 @@ public Player(String name, Colour colour) {
 	super();
 	this.name = name;
 	this.colour = colour;
-	this.hand = hand;
-	this.marbles = marbles;
-	this.selectedCard = selectedCard;
-	this.selectedMarbles = selectedMarbles;
+	selectedCard = null;
+	hand = new ArrayList<>();
+	selectedMarbles =  new ArrayList<>();
+	marbles = new ArrayList<>();
+
 }
 public ArrayList<Card> getHand() {
 	return hand;
