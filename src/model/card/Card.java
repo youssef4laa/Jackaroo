@@ -33,4 +33,5 @@ public abstract class Card{
 		return name;
 	}
 
+
 }
