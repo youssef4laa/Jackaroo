@@ -1,6 +1,8 @@
 package model;
 
-//This is an enum that represents the 4 colours of the marbles.
-public enum Colour { //
-	RED, GREEN, BLUE, YELLOW
+/**
+ * Represents the four possible colours of the marbles in the Jackaroo game.
+ */
+public enum Colour {
+    RED, GREEN, BLUE, YELLOW
 }
