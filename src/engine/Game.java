@@ -11,63 +11,84 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * The Game class represents the main engine of the Jackaroo game, implementing GameManager.
- * It manages game setup, player turns, and board interactions.
- *
- * @author youssef4laa
- * @version 2025-02-26 19:57:10
+ * The {@code Game} class represents the main engine of the Jackaroo game.
+ * It manages game setup, player turns, board interactions, and game state progression.
  */
 public class Game implements GameManager {
-    private final Board board; // Read-only board object
-    private final List<Player> players; // Read-only list of players
-    private final List<Card> firePit; // Read-only list for discarded/played cards
-    private int currentPlayerIndex; // Index of the current player
-    private int turn; // Current turn count
+    
+    /** The game board that manages cell and marble interactions. */
+    private final Board board;
+    
+    /** The list of all players in the game, including human and CPU players. */
+    private final List<Player> players;
+    
+    /** The collection of cards discarded or played, known as the fire pit. */
+    private final List<Card> firePit;
+    
+    /** The index of the player whose turn is currently active. */
+    private int currentPlayerIndex;
+    
+    /** The current turn count, incremented each time all players have taken a turn. */
+    private int turn;
 
     /**
-     * Initializes a new Game instance.
+     * Constructs a new Game instance, initializing the board, players, and game state.
      *
-     * @param playerName The name of the human player.
-     * @throws IOException If there is an issue loading the card pool.
+     * @param playerName The name of the human player participating in the game.
+     * @throws IOException If an error occurs while loading the card pool.
      */
     public Game(String playerName) throws IOException {
-        // Initialize the board with shuffled colours
+        // Initialize the board with shuffled player colours
         ArrayList<Colour> colours = new ArrayList<>(List.of(Colour.values()));
         Collections.shuffle(colours);
         this.board = new Board(colours, this);
         
-        // Load card pool using existing method (passing BoardManager and GameManager)
+        // Load the card pool using the Deck class, passing the board and game manager
         Deck.loadCardPool(board, this);
 
-        // Initialize players list without modifying external methods
+        // Initialize the list of players, adding the human player and three CPU players
         this.players = new ArrayList<>();
         players.add(new Player(playerName, colours.get(0)));
         for (int i = 1; i <= 3; i++) {
             players.add(new CPU("CPU " + i, colours.get(i), board));
         }
         
-        // Draw initial hands for each player and use a new ArrayList to avoid returning the entire cardsPool
+        // Draw initial hands for all players
         for (Player player : players) {
             ArrayList<Card> drawnHand = Deck.drawCards();
             player.setHand(drawnHand);
         }
 
-        // Initialize game state
+        // Initialize the game state
         this.currentPlayerIndex = 0;
         this.turn = 0;
         this.firePit = new ArrayList<>();
     }
 
+    /**
+     * Retrieves the current turn number.
+     *
+     * @return The current turn count.
+     */
     @Override
     public int getTurn() {
         return turn;
     }
 
+    /**
+     * Retrieves the index of the current player.
+     *
+     * @return The index of the player whose turn is active.
+     */
     @Override
     public int getCurrentPlayerIndex() {
         return currentPlayerIndex;
     }
 
+    /**
+     * Advances the game to the next player's turn.
+     * Increments the turn counter when all players have completed a round.
+     */
     @Override
     public void nextTurn() {
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
@@ -76,6 +97,11 @@ public class Game implements GameManager {
         }
     }
 
+    /**
+     * Adds a card to the fire pit (discard pile) if the card is not null.
+     *
+     * @param card The {@link Card} to add to the fire pit.
+     */
     @Override
     public void addToFirePit(Card card) {
         if (card != null) {
@@ -83,6 +109,11 @@ public class Game implements GameManager {
         }
     }
 
+    /**
+     * Checks if the game is over by evaluating if any player has no remaining marbles.
+     *
+     * @return {@code true} if the game is over, {@code false} otherwise.
+     */
     @Override
     public boolean isGameOver() {
         for (Player player : players) {
@@ -93,6 +124,11 @@ public class Game implements GameManager {
         return false;
     }
 
+    /**
+     * Retrieves the player whose turn is currently active.
+     *
+     * @return The current {@link Player}.
+     */
     @Override
     public Player getCurrentPlayer() {
         return players.get(currentPlayerIndex);

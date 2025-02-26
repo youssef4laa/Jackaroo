@@ -1,49 +1,51 @@
 package engine;
+
 import model.card.Card;
 import model.player.Player;
+
 /**
- * An interface that will allow other classes down the hierarchy to communicate with the
- * Game class.
- * 
+ * The {@code GameManager} interface provides methods for interacting with the main game logic.
+ * It allows other classes to access game state information and manage turn progression.
  */
 public interface GameManager {
+    
     /**
-     * Get the current turn count in the game.
-     * 
-     * @return The current turn number
+     * Retrieves the current turn count in the game.
+     *
+     * @return The current turn number.
      */
     int getTurn();
     
     /**
-     * Get the index of the current player.
-     * 
-     * @return The index of the current player in the players list
+     * Retrieves the index of the current player.
+     *
+     * @return The index of the current player in the list of players.
      */
     int getCurrentPlayerIndex();
     
     /**
-     * Move to the next player's turn.
+     * Advances the game to the next player's turn.
      */
     void nextTurn();
     
     /**
-     * Add a card to the fire pit (discard pile).
-     * 
-     * @param card The card to be added to the fire pit
+     * Adds a card to the fire pit (discard pile).
+     *
+     * @param card The {@link Card} to be added to the fire pit.
      */
     void addToFirePit(Card card);
     
     /**
-     * Check if the game has ended.
-     * 
-     * @return true if the game has ended, false otherwise
+     * Checks if the game has ended.
+     *
+     * @return {@code true} if the game has ended, {@code false} otherwise.
      */
     boolean isGameOver();
     
     /**
-     * Get the player currently taking their turn.
-     * 
-     * @return The current Player object
+     * Retrieves the player whose turn is currently active.
+     *
+     * @return The current {@link Player}.
      */
     Player getCurrentPlayer();
 }
