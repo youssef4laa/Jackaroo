@@ -48,6 +48,4 @@ public Card getSelectedCard() {
 	return selectedCard;
 }
 
-
-
 }
