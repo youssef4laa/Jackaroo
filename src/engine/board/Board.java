@@ -6,25 +6,44 @@ import engine.GameManager;
 import model.Colour;
 
 /**
- * Represents the game board for Jackaroo.
- * Initializes track cells, safe zones, and manages game state.
+ * Represents the game board for the Jackaroo game.
+ * Manages the track cells, safe zones, and game state initialization.
+ * Implements {@link BoardManager} to handle board-specific operations.
  */
 public class Board implements BoardManager {
+
+    /** Manages the overarching game logic and player interactions. */
     private final GameManager gameManager;
+
+    /** The main track of the board, consisting of a list of {@link Cell} objects. */
     private final ArrayList<Cell> track;
+
+    /** The safe zones for each player, stored as a list of {@link SafeZone} objects. */
     private final ArrayList<SafeZone> safeZones;
+
+    /** The default split distance used in game mechanics. */
     private int splitDistance;
+
+    /** The total number of cells on the board track. */
     private static final int TOTAL_CELLS = 52;
+
+    /** The number of trap cells to randomly assign on the board. */
     private static final int TRAP_COUNT = 8;
+
+    /** Positions designated as BASE cells on the board. */
     private static final int[] BASE_POSITIONS = {0, 13, 26, 39};
+
+    /** Positions designated as ENTRY cells on the board. */
     private static final int[] ENTRY_POSITIONS = {1, 14, 27, 40};
+
+    /** A random number generator for assigning trap cells. */
     private final Random random = new Random();
 
     /**
-     * Constructs a Board object, initializing the game board.
+     * Constructs a Board object, initializing the game board with cells and safe zones.
      *
-     * @param colourOrder   The order of colours for the safe zones.
-     * @param gameManager   The GameManager instance.
+     * @param colourOrder The order of player colours for assigning safe zones.
+     * @param gameManager The {@link GameManager} instance to manage game state.
      */
     public Board(ArrayList<Colour> colourOrder, GameManager gameManager) {
         this.gameManager = gameManager;
@@ -38,7 +57,7 @@ public class Board implements BoardManager {
     }
 
     /**
-     * Initializes the track with the appropriate cell types.
+     * Initializes the track cells, setting their types based on position.
      */
     private void initializeTrack() {
         for (int i = 0; i < TOTAL_CELLS; i++) {
@@ -48,10 +67,10 @@ public class Board implements BoardManager {
     }
 
     /**
-     * Determines the cell type based on its position.
+     * Determines the {@link CellType} based on the cell's index on the track.
      *
      * @param index The index of the cell on the track.
-     * @return The CellType for the specified index.
+     * @return The determined {@link CellType} (NORMAL, SAFE, BASE, ENTRY).
      */
     private CellType determineCellType(int index) {
         if (contains(BASE_POSITIONS, index)) {
@@ -64,9 +83,9 @@ public class Board implements BoardManager {
     }
 
     /**
-     * Helper method to check if an array contains a specific value.
+     * Checks if a given array contains a specific value.
      *
-     * @param array The array to search.
+     * @param array The array to search through.
      * @param value The value to find.
      * @return True if the array contains the value, false otherwise.
      */
@@ -78,7 +97,7 @@ public class Board implements BoardManager {
     }
 
     /**
-     * Randomly assigns trap cells within the normal track cells.
+     * Randomly assigns the specified number of trap cells on the board.
      *
      * @param count The number of trap cells to assign.
      */
@@ -89,8 +108,8 @@ public class Board implements BoardManager {
     }
 
     /**
-     * Randomizes a cell position on the track and flags it as a trap cell.
-     * The position must be a NORMAL cell and not already flagged as a trap.
+     * Randomizes a cell index and flags the cell as a trap if it is a NORMAL cell
+     * and not already flagged as a trap.
      */
     private void assignTrapCell() {
         int index;
@@ -101,9 +120,9 @@ public class Board implements BoardManager {
     }
 
     /**
-     * Creates SafeZones based on the provided colour order.
+     * Creates safe zones for each player based on the provided colour order.
      *
-     * @param colourOrder The order of colours to assign to safe zones.
+     * @param colourOrder The order of colours to assign to each {@link SafeZone}.
      */
     private void createSafeZones(ArrayList<Colour> colourOrder) {
         for (Colour colour : colourOrder) {
@@ -111,20 +130,40 @@ public class Board implements BoardManager {
         }
     }
 
+    /**
+     * Retrieves the split distance used for game mechanics.
+     *
+     * @return The current split distance as an integer.
+     */
+    @Override
     public int getSplitDistance() {
         return splitDistance;
     }
 
+    /**
+     * Sets the split distance for game mechanics.
+     *
+     * @param splitDistance The split distance to set.
+     */
     public void setSplitDistance(int splitDistance) {
         this.splitDistance = splitDistance;
     }
 
+    /**
+     * Retrieves the track of the board.
+     *
+     * @return A list of {@link Cell} objects representing the board's track.
+     */
     public ArrayList<Cell> getTrack() {
         return track;
     }
 
+    /**
+     * Retrieves the safe zones on the board.
+     *
+     * @return A list of {@link SafeZone} objects representing the safe zones.
+     */
     public ArrayList<SafeZone> getSafeZones() {
         return safeZones;
     }
-
 }
