@@ -12,13 +12,13 @@ private Card selectedCard;
 private ArrayList<Marble> selectedMarbles;
 /**
  * 
- * @param name
- * @param colour
- * @param hand
- * @param marbles
- * @param selectedCard
- * @param selectedMarbles
- */
+ * @param name represents name of the player
+ * @param colour represents the player's safe zones & marbles
+ * @param hand represents the hand each player has
+ * @param marbles represents the marbles in each player's Home Zone
+ * @param selectedCard represents the card to be played
+ * @param selectedMarbles marbles to be played
+ */ 
 public Player(String name, Colour colour) {
 	super();
 	this.name = name;
@@ -27,8 +27,12 @@ public Player(String name, Colour colour) {
 	hand = new ArrayList<>();
 	selectedMarbles =  new ArrayList<>();
 	marbles = new ArrayList<>();
+	for(int i = 0; i<4; i++)
+		marbles.add(new Marble(colour));
 
 }
+
+//getters & setters 
 public ArrayList<Card> getHand() {
 	return hand;
 }
