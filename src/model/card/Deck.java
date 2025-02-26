@@ -56,7 +56,7 @@ public class Deck {
 			drawnCards.add(cardsPool.getFirst());
 			cardsPool.removeFirst();
 		}
-		return cardsPool;
+		return drawnCards;
 	}
 
 	/**

@@ -9,7 +9,7 @@ import model.Colour;
  * Represents the game board for Jackaroo.
  * Initializes track cells, safe zones, and manages game state.
  */
-public class Board {
+public class Board implements BoardManager {
     private final GameManager gameManager;
     private final ArrayList<Cell> track;
     private final ArrayList<SafeZone> safeZones;
