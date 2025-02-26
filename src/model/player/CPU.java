@@ -1,13 +1,15 @@
 package model.player;
+
 import engine.board.BoardManager;
 import model.Colour;
 
-public class CPU extends Player{
+public class CPU extends Player {
 	BoardManager boardManager;
+
 	/**
 	 * 
-	 * @param name represents name of the CPU player
-	 * @param colour represents colour associated with CPU
+	 * @param name         represents name of the CPU player
+	 * @param colour       represents colour associated with CPU
 	 * @param boardManager current board instance.
 	 */
 
@@ -15,5 +17,5 @@ public class CPU extends Player{
 		super(name, colour);
 		this.boardManager = boardManager;
 	}
-	
+
 }
