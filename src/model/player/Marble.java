@@ -2,18 +2,27 @@ package model.player;
 
 import model.Colour;
 
-//Class representing the Marbles in the game.
-public class Marble {
-	private final Colour colour;
 /**
- * 
- * @param colour enum representing colour of the marble (RED, GREEN, BLUE, YELLOW).
+ * Represents a marble in the Jackaroo game. Each marble is associated with a specific colour.
  */
-	public Marble(Colour colour) {
-		super();
-		this.colour = colour;
-	}
-	public Colour getColour() {
-		return this.colour;
-	}
+public class Marble {
+    private final Colour colour;
+
+    /**
+     * Constructs a Marble with a specified colour.
+     * 
+     * @param colour The colour of the marble (RED, GREEN, BLUE, YELLOW).
+     */
+    public Marble(Colour colour) {
+        this.colour = colour;
+    }
+
+    /**
+     * Retrieves the colour of the marble.
+     * 
+     * @return The Colour associated with this marble.
+     */
+    public Colour getColour() {
+        return this.colour;
+    }
 }
