@@ -11,7 +11,7 @@ import engine.board.BoardManager;
 public class Ten extends Standard {
 
     /**
-     * Constructs a Ten card with the specified attributes.
+     * Constructs a Ten card with a rank of 10.
      *
      * @param name        The name of the card.
      * @param description A brief description of the card.

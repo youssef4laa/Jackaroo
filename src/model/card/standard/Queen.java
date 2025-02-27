@@ -11,7 +11,7 @@ import engine.board.BoardManager;
 public class Queen extends Standard {
     
     /**
-     * Constructs a Queen card with the specified attributes.
+     * Constructs a Queen card with a rank of 12.
      *
      * @param name        The name of the card.
      * @param description A brief description of the card.

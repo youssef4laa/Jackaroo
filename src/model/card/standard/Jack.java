@@ -11,7 +11,7 @@ import engine.board.BoardManager;
 public class Jack extends Standard {
 
     /**
-     * Constructs a Jack card with the specified attributes.
+     * Constructs a Jack card with a rank of 11.
      *
      * @param name        The name of the card.
      * @param description A brief description of the card.

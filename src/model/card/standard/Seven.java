@@ -11,7 +11,7 @@ import engine.board.BoardManager;
 public class Seven extends Standard {
 
     /**
-     * Constructs a Seven card with the specified attributes.
+     * Constructs a Seven card with a rank of 7.
      *
      * @param name        The name of the card.
      * @param description A brief description of the card.

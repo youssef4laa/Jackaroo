@@ -11,7 +11,7 @@ import engine.board.BoardManager;
 public class Five extends Standard {
 
     /**
-     * Constructs a Five card with the specified attributes.
+     * Constructs a Five card with a rank of 5.
      *
      * @param name        The name of the card.
      * @param description A brief description of the card.
