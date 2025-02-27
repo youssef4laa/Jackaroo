@@ -5,7 +5,7 @@ package exception;
  * This is a subclass of {@code InvalidSelectionException} and is used
  * to indicate errors when a player selects an invalid card.
  */
-public class InvalidCardSelectionException extends InvalidSelectionException {
+public class InvalidCardException extends InvalidSelectionException {
     
     /**
      * Serial version UID for ensuring compatibility during serialization.
@@ -15,7 +15,7 @@ public class InvalidCardSelectionException extends InvalidSelectionException {
     /**
      * Constructs a new {@code InvalidCardSelectionException} with no detail message.
      */
-    public InvalidCardSelectionException() {
+    public InvalidCardException() {
         super();
     }
 
@@ -24,7 +24,7 @@ public class InvalidCardSelectionException extends InvalidSelectionException {
      *
      * @param message the detail message describing the exception.
      */
-    public InvalidCardSelectionException(String message) {
+    public InvalidCardException(String message) {
         super(message);
     }
 }
