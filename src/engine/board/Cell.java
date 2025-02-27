@@ -18,16 +18,16 @@ public class Cell {
 	private boolean trap;
 
 	/**
-	 * Constructs a Cell with a specified marble, cell type, and trap status.
+	 * Constructs a Cell with a cell type, null marble and false trap status.
 	 *
 	 * @param marble   The marble occupying this cell, or null if the cell is empty.
 	 * @param cellType The type of this cell (NORMAL, SAFE, BASE, ENTRY).
 	 * @param trap     True if this cell is a trap, false otherwise.
 	 */
-	public Cell(Marble marble, CellType cellType, boolean trap) {
-		this.marble = marble;
+	public Cell(CellType cellType) {
+		this.marble = null;
 		this.cellType = cellType;
-		this.trap = trap;
+		this.trap = false;
 	}
 
 	/**
