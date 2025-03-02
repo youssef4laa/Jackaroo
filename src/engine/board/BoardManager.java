@@ -12,4 +12,10 @@ public interface BoardManager {
      * @return The split distance as an integer.
      */
     int getSplitDistance();
+
+    /**
+     * Retrieves the associated board.
+     *
+     * @return The Board instance.
+     */
 }
