@@ -38,7 +38,7 @@ public class Deck {
      * </p>
      * <p>
      * Each line in the CSV is processed, and the appropriate factory is used 
-     * to create and add cards to the pool.
+     * to create and add cards to the pool. 
      * </p>
      *
      * @param boardManager The BoardManager interface to manage board interactions.

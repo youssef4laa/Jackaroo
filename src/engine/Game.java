@@ -15,7 +15,7 @@ import java.util.List;
  * The {@code Game} class represents the main engine of the Jackaroo game.
  * It manages game setup, player turns, board interactions, and game state progression.
  */
-public class Game implements GameManager {
+public class Game implements GameManager{
 
     /** The game board that manages cell and marble interactions. */
     private final Board board;

@@ -81,6 +81,7 @@ public class Board implements BoardManager {
             return CellType.NORMAL;
         }
     }
+
     /**
      * Checks if a given array contains a specific value.
      *
