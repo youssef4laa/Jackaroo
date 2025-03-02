@@ -22,53 +22,45 @@ import java.util.Collections;
 public class Deck {
     
     /** The default path to the CSV file containing card definitions. */
-    private static final String CARDS_FILE;
+    private static final String CARDS_FILE = "Cards.csv";
 
     /** The pool of cards available in the game. */
     private static ArrayList<Card> cardsPool = new ArrayList<>();
 
-    /**
-     * Static block for dynamic initialization of the cards file.
-     * Default CSV file is {@code cards.csv}.
-     */
-    static {
-        CARDS_FILE = "Cards.csv";
-    }
 
     /**
      * Loads the card pool by reading from the CSV file.
-     * 
      * <p>
-     * The method determines whether a card is a standard or wild card based on 
-     * the value of the first column (code) in the CSV input. It utilizes the 
+     * This method determines whether a card is a standard or wild card based on 
+     * the value of the first column (code) in the CSV input. It uses the 
      * {@link StandardCardFactory} for codes less than 14 and the {@link WildCardFactory} 
      * for codes 14 and above.
      * </p>
-     * 
      * <p>
-     * This method reads each line from the CSV, extracts the necessary attributes, 
-     * and delegates the card creation to the appropriate factory.
+     * Each line in the CSV is processed, and the appropriate factory is used 
+     * to create and add cards to the pool.
      * </p>
-     * 
+     *
      * @param boardManager The BoardManager interface to manage board interactions.
      * @param gameManager The GameManager interface to manage game state.
      * @throws IOException If there is an issue reading the CSV file.
      * @throws IllegalArgumentException If the CSV format is invalid.
      */
-    public static void loadCardPool(BoardManager boardManager, GameManager gameManager)
-            throws IOException, IllegalArgumentException {
+    public static void loadCardPool(BoardManager boardManager, GameManager gameManager) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(CARDS_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] row = line.split(",");
-                int code = Integer.parseInt(row[0]); // Use code to determine factory
-                CardFactory factory = (code >= 14) ? new WildCardFactory() : new StandardCardFactory();
-                cardsPool.addAll(factory.createCards(row, line, boardManager, gameManager));
+                try {
+                    int code = Integer.parseInt(row[0]); // Use code to determine factory
+                    CardFactory factory = (code >= 14) ? new WildCardFactory() : new StandardCardFactory();
+                    cardsPool.addAll(factory.createCards(row, line, boardManager, gameManager));
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Skipping invalid row: " + line);
+                }
             }
         }
     }
-
-
     /**
      * Draws a hand of 4 cards from the shuffled card pool.
      * 

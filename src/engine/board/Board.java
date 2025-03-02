@@ -25,7 +25,7 @@ public class Board implements BoardManager {
     private int splitDistance;
 
     /** The total number of cells on the board track. */
-    private static final int TOTAL_CELLS = 52;
+    private static final int TOTAL_CELLS = 100; // Changed from 52 to 100
 
     /** The number of trap cells to randomly assign on the board. */
     private static final int TRAP_COUNT = 8;
@@ -81,7 +81,6 @@ public class Board implements BoardManager {
             return CellType.NORMAL;
         }
     }
-
     /**
      * Checks if a given array contains a specific value.
      *
