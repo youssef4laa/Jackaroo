@@ -28,7 +28,7 @@ public class SafeZone {
 
         // Initialize 4 SAFE cells with no marbles and not set as traps.
         for (int i = 0; i < 4; i++) {
-            this.cells.add(new Cell(null, CellType.SAFE, false));
+            this.cells.add(new Cell(CellType.SAFE));
         }
     }
 
