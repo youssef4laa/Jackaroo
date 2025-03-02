@@ -10,9 +10,7 @@ import java.util.ArrayList;
 /**
  * The {@code CardFactory} interface defines the contract for creating card objects.
  * Implementations generate different types of cards (Standard or Wild) based on input data.
- * 
- * This factory method may throw an {@link IOException} if an error occurs while processing the input data.
- * 
+ *
  * @author Youssef Alaa Ibrahim
  */
 public interface CardFactory {
@@ -25,8 +23,8 @@ public interface CardFactory {
      * @param boardManager The {@link BoardManager} responsible for board interactions.
      * @param gameManager  The {@link GameManager} responsible for game state management.
      * @return An {@link ArrayList} of {@link Card} objects.
-     * @throws IllegalArgumentException If the card code is invalid.
-     * @throws IOException If an error occurs while processing the CSV data.
+     * @throws IOException If an error occurs during card creation (e.g., invalid data in the CSV).
      */
-    ArrayList<Card> createCards(String[] row, String line, BoardManager boardManager, GameManager gameManager) throws IOException;
+    ArrayList<Card> createCards(String[] row, String line, BoardManager boardManager, GameManager gameManager) 
+            throws IOException;
 }
