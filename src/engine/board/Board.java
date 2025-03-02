@@ -62,7 +62,7 @@ public class Board implements BoardManager {
     private void initializeTrack() {
         for (int i = 0; i < TOTAL_CELLS; i++) {
             CellType cellType = determineCellType(i);
-            track.add(new Cell(null, cellType, false));
+            track.add(new Cell(cellType));
         }
     }
 
