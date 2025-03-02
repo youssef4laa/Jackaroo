@@ -22,7 +22,7 @@ import java.util.Collections;
 public class Deck {
     
     /** The default path to the CSV file containing card definitions. */
-    private static final String CARDS_FILE;
+    private static final String CARDS_FILE = "Cards.csv";
 
     /** The pool of cards available in the game. */
     private static ArrayList<Card> cardsPool = new ArrayList<>();
@@ -31,10 +31,6 @@ public class Deck {
      * Static block for dynamic initialization of the cards file.
      * Default CSV file is {@code cards.csv}.
      */
-    static {
-        CARDS_FILE = "cards.csv";
-    }
-
     /**
      * Loads the card pool by reading from the CSV file.
      * 
@@ -46,13 +42,11 @@ public class Deck {
      * </p>
      * 
      * <p>
-<<<<<<< Updated upstream
      * Each line in the CSV is processed, and the appropriate factory is used 
      * to create and add cards to the pool. 
 =======
      * This method reads each line from the CSV, extracts the necessary attributes, 
      * and delegates the card creation to the appropriate factory.
->>>>>>> Stashed changes
      * </p>
      * 
      * @param boardManager The BoardManager interface to manage board interactions.

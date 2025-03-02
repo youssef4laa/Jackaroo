@@ -59,42 +59,52 @@ public class Board implements BoardManager {
     /**
      * Initializes the track cells, setting their types based on position.
      */
-    private void initializeTrack() {
-        for (int i = 0; i < TOTAL_CELLS; i++) {
-            CellType cellType = determineCellType(i);
-            track.add(new Cell(cellType));
-        }
-    }
-
     /**
-     * Determines the {@link CellType} based on the cell's index on the track.
-     *
-     * @param index The index of the cell on the track.
-     * @return The determined {@link CellType} (NORMAL, SAFE, BASE, ENTRY).
+     * Initializes the track cells in an anti-clockwise order.
      */
-    private CellType determineCellType(int index) {
-        if (contains(BASE_POSITIONS, index)) {
-            return CellType.BASE;
-        } else if (contains(ENTRY_POSITIONS, index)) {
-            return CellType.ENTRY;
-        } else {
-            return CellType.NORMAL;
-        }
+/**
+ * Initializes the track cells in an anti-clockwise order.
+ */
+private void initializeTrack() {
+    for (int i = 0; i < TOTAL_CELLS; i++) { // Forward iteration to maintain correct indexing
+        int reversedIndex = TOTAL_CELLS - 1 - i; // Adjust index to match new anti-clockwise order
+        CellType cellType = determineCellType(reversedIndex);
+        track.add(new Cell(cellType));
     }
+}
 
-    /**
-     * Checks if a given array contains a specific value.
-     *
-     * @param array The array to search through.
-     * @param value The value to find.
-     * @return True if the array contains the value, false otherwise.
-     */
-    private boolean contains(int[] array, int value) {
-        for (int i : array) {
-            if (i == value) return true;
-        }
-        return false;
+/**
+ * Determines the {@link CellType} based on the cell's index on the track.
+ *
+ * @param index The index of the cell on the track.
+ * @return The determined {@link CellType} (NORMAL, SAFE, BASE, ENTRY).
+ */
+private CellType determineCellType(int index) {
+    int adjustedIndex = TOTAL_CELLS - 1 - index; // Adjust to match anti-clockwise order
+
+    if (contains(BASE_POSITIONS, adjustedIndex)) {
+        return CellType.BASE;
+    } else if (contains(ENTRY_POSITIONS, adjustedIndex)) {
+        return CellType.ENTRY;
+    } else {
+        return CellType.NORMAL;
     }
+}
+
+/**
+ * Checks if a given array contains a specific value.
+ *
+ * @param array The array to search through.
+ * @param value The value to find.
+ * @return True if the array contains the value, false otherwise.
+ */
+private boolean contains(int[] array, int value) {
+    for (int i : array) {
+        if (i == value) return true;
+    }
+    return false;
+}
+
 
     /**
      * Randomly assigns the specified number of trap cells on the board.
