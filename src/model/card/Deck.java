@@ -61,12 +61,13 @@ public class Deck {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] row = line.split(",");
-                int code = Integer.parseInt(row[0]); // Use code instead of row length
+                int code = Integer.parseInt(row[0]); // Use code to determine factory
                 CardFactory factory = (code >= 14) ? new WildCardFactory() : new StandardCardFactory();
-                factory.createCards(row, line, boardManager, gameManager);
+                cardsPool.addAll(factory.createCards(row, line, boardManager, gameManager));
             }
         }
     }
+
 
     /**
      * Draws a hand of 4 cards from the shuffled card pool.

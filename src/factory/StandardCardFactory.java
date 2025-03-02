@@ -4,8 +4,6 @@ import engine.GameManager;
 import engine.board.BoardManager;
 import model.card.Card;
 import model.card.standard.*;
-import model.card.CardFactory;
-
 import java.util.ArrayList;
 
 /**
