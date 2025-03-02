@@ -1,11 +1,12 @@
 package model.card;
-
+import factory.CardFactory;
+import factory.StandardCardFactory;
+import factory.WildCardFactory;
 import java.util.ArrayList;
 import java.io.*;
 import engine.GameManager;
 import engine.board.BoardManager;
-import model.card.standard.*;
-import model.card.wild.*;
+
 import java.util.Collections;
 
 /**
@@ -38,11 +39,15 @@ public class Deck {
      * Loads the card pool by reading from the CSV file.
      * 
      * <p>
-     * The method distinguishes between standard and wild cards based on 
-     * the row length of the CSV input. It uses helper methods 
-     * {@link #createStandardCard(BoardManager, GameManager, String[], String)} 
-     * and {@link #createWildCard(BoardManager, GameManager, String[], String)} 
-     * to handle specific card types.
+     * The method determines whether a card is a standard or wild card based on 
+     * the value of the first column (code) in the CSV input. It utilizes the 
+     * {@link StandardCardFactory} for codes less than 14 and the {@link WildCardFactory} 
+     * for codes 14 and above.
+     * </p>
+     * 
+     * <p>
+     * This method reads each line from the CSV, extracts the necessary attributes, 
+     * and delegates the card creation to the appropriate factory.
      * </p>
      * 
      * @param boardManager The BoardManager interface to manage board interactions.
@@ -56,13 +61,9 @@ public class Deck {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] row = line.split(",");
-                if (row.length == 4) {
-                    createStandardCard(boardManager, gameManager, row, line);
-                } else if (row.length == 6) {
-                    createWildCard(boardManager, gameManager, row, line);
-                } else {
-                    throw new IllegalArgumentException("Invalid CSV format: " + line);
-                }
+                int code = Integer.parseInt(row[0]); // Use code instead of row length
+                CardFactory factory = (code >= 14) ? new WildCardFactory() : new StandardCardFactory();
+                factory.createCards(row, line, boardManager, gameManager);
             }
         }
     }
@@ -82,93 +83,4 @@ public class Deck {
         return drawnCards;
     }
 
-    /**
-     * Creates and adds standard cards to the card pool.
-     * 
-     * <p>
-     * The method uses the card code to determine the specific type of 
-     * {@link Standard} card to create. If the code is invalid, 
-     * an {@link IllegalArgumentException} is thrown.
-     * </p>
-     * 
-     * @param boardManager The BoardManager interface for board operations.
-     * @param gameManager The GameManager interface for game control.
-     * @param row An array of strings representing card attributes.
-     * @param line The raw CSV line for error reporting.
-     * @throws IllegalArgumentException If the card code is invalid.
-     */
-    private static void createStandardCard(BoardManager boardManager, GameManager gameManager, String[] row,
-            String line) {
-        int code = Integer.parseInt(row[0]);
-        int frequency = Integer.parseInt(row[1]);
-        for (int i = 0; i < frequency; i++) {
-            Standard temporary;
-            switch (code) {
-                case 0:
-                    temporary = new Standard(row[2], row[3], Integer.parseInt(row[4]), Suit.valueOf(row[5]), boardManager,
-                            gameManager);
-                    break;
-                case 1:
-                    temporary = new Ace(row[2], row[3], Suit.valueOf(row[5]), boardManager, gameManager);
-                    break;
-                case 13:
-                    temporary = new King(row[2], row[3], Suit.valueOf(row[5]), boardManager, gameManager);
-                    break;
-                case 12:
-                    temporary = new Queen(row[2], row[3], Suit.valueOf(row[5]), boardManager, gameManager);
-                    break;
-                case 11:
-                    temporary = new Jack(row[2], row[3], Suit.valueOf(row[5]), boardManager, gameManager);
-                    break;
-                case 4:
-                    temporary = new Four(row[2], row[3], Suit.valueOf(row[5]), boardManager, gameManager);
-                    break;
-                case 5:
-                    temporary = new Five(row[2], row[3], Suit.valueOf(row[5]), boardManager, gameManager);
-                    break;
-                case 7:
-                    temporary = new Seven(row[2], row[3], Suit.valueOf(row[5]), boardManager, gameManager);
-                    break;
-                case 10:
-                    temporary = new Ten(row[2], row[3], Suit.valueOf(row[5]), boardManager, gameManager);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid Card Code: " + line);
-            }
-            cardsPool.add(temporary);
-        }
-    }
-
-    /**
-     * Creates and adds wild cards to the card pool.
-     * 
-     * <p>
-     * The method supports the {@link Burner} and {@link Saver} wild card types.
-     * Invalid card codes trigger an {@link IllegalArgumentException}.
-     * </p>
-     * 
-     * @param boardManager The BoardManager interface for board operations.
-     * @param gameManager The GameManager interface for game control.
-     * @param row An array of strings representing card attributes.
-     * @param line The raw CSV line for error reporting.
-     * @throws IllegalArgumentException If the card code is invalid.
-     */
-    private static void createWildCard(BoardManager boardManager, GameManager gameManager, String[] row, String line) {
-        int code = Integer.parseInt(row[0]);
-        int frequency = Integer.parseInt(row[1]);
-        for (int i = 0; i < frequency; i++) {
-            Wild temporary;
-            switch (code) {
-                case 14:
-                    temporary = new Burner(row[3], row[4], boardManager, gameManager);
-                    break;
-                case 15:
-                    temporary = new Saver(row[3], row[4], boardManager, gameManager);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid Card Code: " + line);
-            }
-            cardsPool.add(temporary);
-        }
-    }
 }
