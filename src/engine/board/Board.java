@@ -170,6 +170,10 @@ private boolean contains(int[] array, int value) {
     public ArrayList<Cell> getTrack() {
         return track;
     }
+    public static BoardManager createBoardManager(ArrayList<Colour> colourOrder, GameManager gameManager) {
+        return new Board(colourOrder, gameManager);
+    }
+
 
     /**
      * Retrieves the safe zones on the board.
