@@ -11,7 +11,6 @@ import model.Colour;
  * Implements {@link BoardManager} to handle board-specific operations.
  */
 public class Board implements BoardManager {
-
     /** Manages the overarching game logic and player interactions. */
     private final GameManager gameManager;
 
@@ -65,13 +64,17 @@ public class Board implements BoardManager {
 /**
  * Initializes the track cells in an anti-clockwise order.
  */
-private void initializeTrack() {
-    for (int i = 0; i < TOTAL_CELLS; i++) { // Forward iteration to maintain correct indexing
-        int reversedIndex = TOTAL_CELLS - 1 - i; // Adjust index to match new anti-clockwise order
-        CellType cellType = determineCellType(reversedIndex);
-        track.add(new Cell(cellType));
+    private void initializeTrack() {
+        track.clear(); // Clear existing track data before initializing
+        for (int i = 0; i < 4; i++) {
+            track.add(new Cell(CellType.BASE));
+            for (int j = 0; j < 22; j++)
+                track.add(new Cell(CellType.NORMAL));
+            track.add(new Cell(CellType.ENTRY));
+            track.add(new Cell(CellType.NORMAL));
+        }
     }
-}
+
 
 /**
  * Determines the {@link CellType} based on the cell's index on the track.
