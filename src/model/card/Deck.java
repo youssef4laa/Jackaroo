@@ -32,7 +32,7 @@ public class Deck {
      * Default CSV file is {@code cards.csv}.
      */
     static {
-        CARDS_FILE = "cards.csv";
+        CARDS_FILE = "Cards.csv";
     }
 
     /**
