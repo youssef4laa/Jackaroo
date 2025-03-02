@@ -58,7 +58,7 @@ public class Deck {
                 String[] row = line.split(",");
                 if (row.length == 4) {
                     createStandardCard(boardManager, gameManager, row, line);
-                } else if (row.length == 6) {
+                } else if (row.length =	6) {
                     createWildCard(boardManager, gameManager, row, line);
                 } else {
                     throw new IllegalArgumentException("Invalid CSV format: " + line);
