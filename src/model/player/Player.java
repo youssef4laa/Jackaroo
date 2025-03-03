@@ -14,7 +14,7 @@ public class Player {
     private ArrayList<Card> hand;
     private ArrayList<Marble> marbles;
     private Card selectedCard;
-    private ArrayList<Marble> selectedMarbles;
+    private final ArrayList<Marble> selectedMarbles;
 
     /**
      * Constructs a Player with a specified name and associated colour.

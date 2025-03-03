@@ -76,11 +76,8 @@ public class Deck {
      */
     public static ArrayList<Card> drawCards() {
         Collections.shuffle(cardsPool);
-        ArrayList<Card> drawnCards = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
-            drawnCards.add(cardsPool.get(0));
-            cardsPool.remove(0);
-        }
+        ArrayList<Card> drawnCards = new ArrayList<>(cardsPool.subList(0, Math.min(4, cardsPool.size())));
+            cardsPool.removeAll(drawnCards);
         return drawnCards;
     }
 

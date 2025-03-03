@@ -11,7 +11,6 @@ import model.Colour;
  * Implements {@link BoardManager} to handle board-specific operations.
  */
 public class Board implements BoardManager {
-
     /** Manages the overarching game logic and player interactions. */
     private final GameManager gameManager;
 
@@ -25,7 +24,7 @@ public class Board implements BoardManager {
     private int splitDistance;
 
     /** The total number of cells on the board track. */
-    private static final int TOTAL_CELLS = 52;
+    private static final int TOTAL_CELLS = 100; // Changed from 52 to 100
 
     /** The number of trap cells to randomly assign on the board. */
     private static final int TRAP_COUNT = 8;
@@ -59,42 +58,56 @@ public class Board implements BoardManager {
     /**
      * Initializes the track cells, setting their types based on position.
      */
+    /**
+     * Initializes the track cells in an anti-clockwise order.
+     */
+/**
+ * Initializes the track cells in an anti-clockwise order.
+ */
     private void initializeTrack() {
-        for (int i = 0; i < TOTAL_CELLS; i++) {
-            CellType cellType = determineCellType(i);
-            track.add(new Cell(null, cellType, false));
+        track.clear(); // Clear existing track data before initializing
+        for (int i = 0; i < 4; i++) {
+            track.add(new Cell(CellType.BASE));
+            for (int j = 0; j < 22; j++)
+                track.add(new Cell(CellType.NORMAL));
+            track.add(new Cell(CellType.ENTRY));
+            track.add(new Cell(CellType.NORMAL));
         }
     }
 
-    /**
-     * Determines the {@link CellType} based on the cell's index on the track.
-     *
-     * @param index The index of the cell on the track.
-     * @return The determined {@link CellType} (NORMAL, SAFE, BASE, ENTRY).
-     */
-    private CellType determineCellType(int index) {
-        if (contains(BASE_POSITIONS, index)) {
-            return CellType.BASE;
-        } else if (contains(ENTRY_POSITIONS, index)) {
-            return CellType.ENTRY;
-        } else {
-            return CellType.NORMAL;
-        }
-    }
 
-    /**
-     * Checks if a given array contains a specific value.
-     *
-     * @param array The array to search through.
-     * @param value The value to find.
-     * @return True if the array contains the value, false otherwise.
-     */
-    private boolean contains(int[] array, int value) {
-        for (int i : array) {
-            if (i == value) return true;
-        }
-        return false;
+/**
+ * Determines the {@link CellType} based on the cell's index on the track.
+ *
+ * @param index The index of the cell on the track.
+ * @return The determined {@link CellType} (NORMAL, SAFE, BASE, ENTRY).
+ */
+private CellType determineCellType(int index) {
+    int adjustedIndex = TOTAL_CELLS - 1 - index; // Adjust to match anti-clockwise order
+
+    if (contains(BASE_POSITIONS, adjustedIndex)) {
+        return CellType.BASE;
+    } else if (contains(ENTRY_POSITIONS, adjustedIndex)) {
+        return CellType.ENTRY;
+    } else {
+        return CellType.NORMAL;
     }
+}
+
+/**
+ * Checks if a given array contains a specific value.
+ *
+ * @param array The array to search through.
+ * @param value The value to find.
+ * @return True if the array contains the value, false otherwise.
+ */
+private boolean contains(int[] array, int value) {
+    for (int i : array) {
+        if (i == value) return true;
+    }
+    return false;
+}
+
 
     /**
      * Randomly assigns the specified number of trap cells on the board.
@@ -156,6 +169,9 @@ public class Board implements BoardManager {
      */
     public ArrayList<Cell> getTrack() {
         return track;
+    }
+    public static BoardManager createBoardManager(ArrayList<Colour> colourOrder, GameManager gameManager) {
+        return new Board(colourOrder, gameManager);
     }
 
     /**

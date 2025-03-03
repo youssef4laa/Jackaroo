@@ -4,7 +4,6 @@ import engine.GameManager;
 import engine.board.BoardManager;
 import model.card.Card;
 import model.card.wild.*;
-import model.card.CardFactory;
 
 import java.util.ArrayList;
 
@@ -23,8 +22,8 @@ public class WildCardFactory implements CardFactory {
 
         for (int i = 0; i < frequency; i++) {
             switch (code) {
-                case 14: cards.add(new Burner(row[3], row[4], boardManager, gameManager)); break;
-                case 15: cards.add(new Saver(row[3], row[4], boardManager, gameManager)); break;
+                case 14: cards.add(new Burner(row[2], row[3], boardManager, gameManager)); break;
+                case 15: cards.add(new Saver(row[2], row[3], boardManager, gameManager)); break;
                 default:
                     throw new IllegalArgumentException("Invalid Wild Card Code: " + line);
             }
