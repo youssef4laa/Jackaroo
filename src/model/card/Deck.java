@@ -2,7 +2,7 @@ package model.card;
 import factory.CardFactory;
 import factory.StandardCardFactory;
 import factory.WildCardFactory;
-import java.util.ArrayList;
+import java.util.*;
 import java.io.*;
 import engine.GameManager;
 import engine.board.BoardManager;
@@ -54,13 +54,12 @@ public class Deck {
      * @throws IOException If there is an issue reading the CSV file.
      * @throws IllegalArgumentException If the CSV format is invalid.
      */
-    public static void loadCardPool(BoardManager boardManager, GameManager gameManager) 
-            throws IOException {
+    public static void loadCardPool(BoardManager boardManager, GameManager gameManager) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(CARDS_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] row = line.split(",");
-                int code = Integer.parseInt(row[0]); // Use code to determine factory
+                String[] row = splitCSVLine(line); // Use custom CSV parser
+                int code = Integer.parseInt(row[0]); // First column
                 CardFactory factory = (code >= 14) ? new WildCardFactory() : new StandardCardFactory();
                 cardsPool.addAll(factory.createCards(row, line, boardManager, gameManager));
             }
@@ -76,11 +75,34 @@ public class Deck {
     public static ArrayList<Card> drawCards() {
         Collections.shuffle(cardsPool);
         ArrayList<Card> drawnCards = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
-            drawnCards.add(cardsPool.get(0));
-            cardsPool.remove(0);
+        int drawCount = Math.min(4, cardsPool.size()); // Draw up to 4 cards, but no more than available
+
+        for (int i = 0; i < drawCount; i++) {
+            drawnCards.add(cardsPool.remove(0)); // Removes directly instead of using get() + remove()
         }
         return drawnCards;
+    }
+
+    public static String[] splitCSVLine(String line) {
+        List<String> tokens = new ArrayList<>();
+        boolean insideQuotes = false;
+        StringBuilder currentToken = new StringBuilder();
+
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+
+            if (c == '"' && (i == 0 || line.charAt(i - 1) != '\\')) {
+                insideQuotes = !insideQuotes; // Toggle insideQuotes
+            } else if (c == ',' && !insideQuotes) {
+                tokens.add(currentToken.toString().trim()); // Store token
+                currentToken.setLength(0); // Reset token
+            } else {
+                currentToken.append(c);
+            }
+        }
+        tokens.add(currentToken.toString().trim()); // Add last token
+
+        return tokens.toArray(new String[0]);
     }
 
 }

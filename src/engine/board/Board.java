@@ -174,7 +174,6 @@ private boolean contains(int[] array, int value) {
         return new Board(colourOrder, gameManager);
     }
 
-
     /**
      * Retrieves the safe zones on the board.
      *
