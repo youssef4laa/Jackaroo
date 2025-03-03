@@ -9,7 +9,6 @@ import engine.board.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * The {@code Game} class represents the main engine of the Jackaroo game. it
@@ -22,10 +21,10 @@ public class Game implements GameManager {
 	private final Board board;
 
 	/** The list of all players in the game, including human and CPU players. */
-	private final List<Player> players;
+	private final ArrayList<Player> players;
 
 	/** The collection of cards discarded or played, known as the fire pit. */
-	private final List<Card> firePit;
+	private final ArrayList<Card> firePit;
 
 	/** The index of the player whose turn is currently active. */
 	private int currentPlayerIndex;
@@ -44,14 +43,14 @@ public class Game implements GameManager {
 	 */
 	public Game(String playerName) throws IOException {
 		// Initialize the board with shuffled player colours
-		ArrayList<Colour> colours = new ArrayList<>(List.of(Colour.values()));
+		ArrayList<Colour> colours = new ArrayList<>();
+		colours.add(Colour.BLUE);
+		colours.add(Colour.GREEN);
+		colours.add(Colour.RED);
+		colours.add(Colour.YELLOW);
 		Collections.shuffle(colours);
 		this.board = new Board(colours, this);
-
-		// Load the card pool using the Deck class, passing the board and game manager
 		Deck.loadCardPool(board, this);
-
-		// Initialize the list of players, adding the human player and three CPU players
 		this.players = new ArrayList<>();
 		players.add(new Player(playerName, colours.get(0)));
 		for (int i = 1; i <= 3; i++) {
@@ -70,73 +69,16 @@ public class Game implements GameManager {
 		this.firePit = new ArrayList<>();
 	}
 
-	/**
-	 * Retrieves the current turn number.
-	 *
-	 * @return The current turn count.
-	 */
-	@Override
-	public int getTurn() {
-		return turn;
+
+	public Board getBoard() {
+		return board;
 	}
 
-	/**
-	 * Retrieves the index of the current player.
-	 *
-	 * @return The index of the player whose turn is active.
-	 */
-	@Override
-	public int getCurrentPlayerIndex() {
-		return currentPlayerIndex;
+	public ArrayList<Player> getPlayers() {
+		return players;
+	}
+	public ArrayList<Card> getFirePit() {
+		return firePit;
 	}
 
-	/**
-	 * Advances the game to the next player's turn. Increments the turn counter when
-	 * all players have completed a round.
-	 */
-	@Override
-	public void nextTurn() {
-		currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-		if (currentPlayerIndex == 0) {
-			turn++;
-		}
-	}
-
-	/**
-	 * Adds a card to the fire pit (discard pile) if the card is not null.
-	 *
-	 * @param card The {@link Card} to add to the fire pit.
-	 */
-	@Override
-	public void addToFirePit(Card card) {
-		if (card != null) {
-			firePit.add(card);
-		}
-	}
-
-	/**
-	 * Checks if the game is over by evaluating if any player has no remaining
-	 * marbles.
-	 *
-	 * @return {@code true} if the game is over, {@code false} otherwise.
-	 */
-	@Override
-	public boolean isGameOver() {
-		for (Player player : players) {
-			if (player.getMarbles().isEmpty()) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Retrieves the player whose turn is currently active.
-	 *
-	 * @return The current {@link Player}.
-	 */
-	@Override
-	public Player getCurrentPlayer() {
-		return players.get(currentPlayerIndex);
-	}
 }

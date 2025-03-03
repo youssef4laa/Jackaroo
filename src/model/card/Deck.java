@@ -22,7 +22,7 @@ import java.util.Collections;
 public class Deck {
     
     /** The default path to the CSV file containing card definitions. */
-    private static final String CARDS_FILE;
+    private static final String CARDS_FILE = "Cards.csv";
 
     /** The pool of cards available in the game. */
     private static ArrayList<Card> cardsPool = new ArrayList<>();
@@ -31,9 +31,6 @@ public class Deck {
      * Static block for dynamic initialization of the cards file.
      * Default CSV file is {@code cards.csv}.
      */
-    static {
-        CARDS_FILE = "Cards.csv";
-    }
 
     /**
      * Loads the card pool by reading from the CSV file.
