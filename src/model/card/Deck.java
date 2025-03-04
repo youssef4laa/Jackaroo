@@ -25,7 +25,7 @@ public class Deck {
     private static final String CARDS_FILE = "Cards.csv";
 
     /** The pool of cards available in the game. */
-    private static	 ArrayList<Card> cardsPool = new ArrayList<>();
+    private static	 ArrayList<Card> cardsPool;
 
     /**
      * Static block for dynamic initialization of the cards file.
@@ -56,7 +56,7 @@ public class Deck {
      */
     public static void loadCardPool(BoardManager boardManager, GameManager gameManager)
             throws IOException, IllegalArgumentException {
-        cardsPool.clear(); // Clear existing cards instead of creating a new list
+    	cardsPool = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(CARDS_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
