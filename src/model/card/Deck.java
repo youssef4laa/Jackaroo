@@ -83,15 +83,21 @@ public class Deck {
         }
     }
 
+
+
+
+
     /**
      * Draws a hand of 4 cards from the shuffled card pool.
      * 
      * @return An {@link ArrayList} of {@link Card} objects representing the drawn hand.
      */
     public static ArrayList<Card> drawCards() {
+
         Collections.shuffle(cardsPool);
         ArrayList<Card> drawnCards = new ArrayList<>();
         int drawCount = Math.min(4, cardsPool.size());
+
         for (int i = 0; i < drawCount; i++) {
             drawnCards.add(cardsPool.remove(0));
         }
