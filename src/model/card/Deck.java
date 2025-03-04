@@ -1,5 +1,4 @@
 package model.card;
-import factory.CardFactory;
 import factory.StandardCardFactory;
 import factory.WildCardFactory;
 import java.util.ArrayList;
@@ -31,9 +30,7 @@ public class Deck {
      * Static block for dynamic initialization of the cards file.
      * Default CSV file is {@code cards.csv}.
      */
-  
     
-
     /**
      * Loads the card pool by reading from the CSV file.
      * 
@@ -82,17 +79,12 @@ public class Deck {
             }
         }
     }
-
-
-
-
     /**
      * Draws a hand of 4 cards from the shuffled card pool.
      * 
      * @return An {@link ArrayList} of {@link Card} objects representing the drawn hand.
      */
     public static ArrayList<Card> drawCards() {
-
         Collections.shuffle(cardsPool);
         ArrayList<Card> drawnCards = new ArrayList<>();
         int drawCount = Math.min(4, cardsPool.size());
