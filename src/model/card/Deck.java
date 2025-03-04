@@ -22,18 +22,17 @@ import java.util.Collections;
 public class Deck {
     
     /** The default path to the CSV file containing card definitions. */
-    private static final String CARDS_FILE;
+    private static final String CARDS_FILE = "Cards.csv";
 
     /** The pool of cards available in the game. */
-    private static ArrayList<Card> cardsPool = new ArrayList<>();
+    private static	 ArrayList<Card> cardsPool = new ArrayList<>();
 
     /**
      * Static block for dynamic initialization of the cards file.
      * Default CSV file is {@code cards.csv}.
      */
-    static {
-        CARDS_FILE = "cards.csv";
-    }
+  
+    
 
     /**
      * Loads the card pool by reading from the CSV file.
@@ -57,17 +56,32 @@ public class Deck {
      */
     public static void loadCardPool(BoardManager boardManager, GameManager gameManager)
             throws IOException, IllegalArgumentException {
+        cardsPool.clear(); // Clear existing cards instead of creating a new list
         try (BufferedReader reader = new BufferedReader(new FileReader(CARDS_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] row = line.split(",");
-                int code = Integer.parseInt(row[0]); // Use code to determine factory
-                CardFactory factory = (code >= 14) ? new WildCardFactory() : new StandardCardFactory();
-                cardsPool.addAll(factory.createCards(row, line, boardManager, gameManager));
+                String[] row;
+                // Determine factory type based on the first integer
+                if (line.matches("^\\d+.*")) { // Ensure it starts with a number
+                    row = line.split(","); // Default split
+                    int code = Integer.parseInt(row[0]); // Extract the code safely
+                    if (code >= 14) {
+                        if (row.length > 4) {
+                            row = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"); // Apply regex for WildCardFactory
+                        }
+                        cardsPool.addAll(new WildCardFactory().createCards(row, line, boardManager, gameManager));
+                    } else {
+                        if (row.length > 6) {
+                            row = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"); // Apply regex for StandardCardFactory
+                        }
+                        cardsPool.addAll(new StandardCardFactory().createCards(row, line, boardManager, gameManager));
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid card format: " + line);
+                }
             }
         }
     }
-
 
     /**
      * Draws a hand of 4 cards from the shuffled card pool.
@@ -76,9 +90,14 @@ public class Deck {
      */
     public static ArrayList<Card> drawCards() {
         Collections.shuffle(cardsPool);
-        ArrayList<Card> drawnCards = new ArrayList<>(cardsPool.subList(0, Math.min(4, cardsPool.size())));
-            cardsPool.removeAll(drawnCards);
+        ArrayList<Card> drawnCards = new ArrayList<>();
+        int drawCount = Math.min(4, cardsPool.size());
+        for (int i = 0; i < drawCount; i++) {
+            drawnCards.add(cardsPool.remove(0));
+        }
         return drawnCards;
     }
+
+
 
 }
