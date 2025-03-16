@@ -12,7 +12,7 @@ public class Player {
     private final String name;
     private final Colour colour;
     private ArrayList<Card> hand;
-    private ArrayList<Marble> marbles;
+    private final ArrayList<Marble> marbles;
     private Card selectedCard;
     private final ArrayList<Marble> selectedMarbles;
 
