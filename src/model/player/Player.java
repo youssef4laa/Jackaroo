@@ -55,5 +55,21 @@ public class Player {
     public Card getSelectedCard() {
         return selectedCard;
     }
+    
+    public void setSelectedCard(Card card) {
+        this.selectedCard = card;
+    }
+    public void regainMarble(Marble marble) {
+        if (marble != null && marble.getColour() == this.colour && !marbles.contains(marble)) {
+            marbles.add(marble);
+        }
+    }
+    public Marble getOneMarble() {return null;}
+    public void selectCard(Card card) throws InvalidCardException{}
+    public void selectMarble(Marble marble) throws InvalidMarbleException{}
+    public void deselectAll() {}
+    public void play() throws GameException{}
+    
+    
 
 }
