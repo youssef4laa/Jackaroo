@@ -3,6 +3,8 @@ package model.card.standard;
 import engine.GameManager;
 import engine.board.BoardManager;
 import model.card.Card;
+import model.player.Marble;
+import java.util.ArrayList;
 
 public class Standard extends Card {
     private final int rank;
@@ -21,4 +23,10 @@ public class Standard extends Card {
     public Suit getSuit() {
         return suit;
     }
+
+    public boolean validateMarbleSize(ArrayList<Marble> marbles) {
+        return marbles != null && marbles.size() == 1;
+    }
+    
+
 }

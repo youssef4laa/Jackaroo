@@ -4,17 +4,19 @@ import engine.GameManager;
 import engine.board.BoardManager;
 import model.player.Marble;
 import java.util.ArrayList;
-public class Four  extends Standard {
+import exception.*;
 
-    public Four(String name, String description, Suit suit, BoardManager boardManager, GameManager gameManager) {
-        super(name, description, 4, suit, boardManager, gameManager);
+public class Two extends Standard {
+
+    public Two(String name, String description, Suit suit, BoardManager boardManager, GameManager gameManager) {
+        super(name, description, 2, suit, boardManager, gameManager);
     }
-
+    
     @Override
     public boolean validateMarbleSize(ArrayList<Marble> marbles) {
         return marbles != null && marbles.size() == 1;
     }
-
+    
     public void act(ArrayList<Marble> marbles)
             throws ActionException, InvalidMarbleException {
 
@@ -23,6 +25,6 @@ public class Four  extends Standard {
         }
 
         Marble m = marbles.get(0);
-        boardManager.moveBy(m, -4, false);
+        boardManager.moveBy(m, 2, false);
     }
 }

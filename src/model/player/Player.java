@@ -59,16 +59,60 @@ public class Player {
     public void setSelectedCard(Card card) {
         this.selectedCard = card;
     }
+    
     public void regainMarble(Marble marble) {
         if (marble != null && marble.getColour() == this.colour && !marbles.contains(marble)) {
             marbles.add(marble);
         }
     }
-    public Marble getOneMarble() {return null;}
-    public void selectCard(Card card) throws InvalidCardException{}
-    public void selectMarble(Marble marble) throws InvalidMarbleException{}
-    public void deselectAll() {}
-    public void play() throws GameException{}
+    
+    public Marble getOneMarble() {
+        if (!marbles.isEmpty()) {
+            return marbles.get(0);
+        }
+        return null;
+    }
+
+    public void selectCard(Card card) throws InvalidCardException {
+        if (card == null || !hand.contains(card)) {
+            throw new InvalidCardException("Selected card is not in player's hand");
+        }
+        this.selectedCard = card;
+    }
+
+    public void selectMarble(Marble marble) throws InvalidMarbleException {
+    if (selectedMarbles.size() >= 2) {
+        throw new InvalidMarbleException("Cannot select more than two marbles.");
+    }
+    if (marble == null || marble.getColour() != this.colour) {
+        throw new InvalidMarbleException("Selected marble does not belong to the current player.");
+    }
+    selectedMarbles.add(marble);
+}
+	
+    public void deselectAll() {
+        selectedCard = null;
+        selectedMarbles.clear();
+    }
+
+    public void play() throws GameException {
+        if (selectedCard == null) {
+            throw new InvalidCardException("No card has been selected.");
+        }
+
+        ArrayList<Marble> marblesToActOn = new ArrayList<>(selectedMarbles);
+
+        if (!selectedCard.validateMarbleSize(marblesToActOn)) {
+            throw new InvalidMarbleException("Invalid number of selected marbles for this card.");
+        }
+
+        if (!selectedCard.validateMarbleColours(marblesToActOn)) {
+            throw new InvalidMarbleException("Invalid marble colours for the selected card.");
+        }
+
+        selectedCard.act(marblesToActOn);
+    }
+
     
     
 
