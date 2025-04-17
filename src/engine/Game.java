@@ -4,250 +4,216 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Random;
 
 import engine.board.Board;
 import model.Colour;
 import model.card.Card;
 import model.card.Deck;
 import model.player.*;
-import exception.InvalidCardException;
 import exception.*;
 import engine.board.Cell;
 import engine.board.SafeZone;
 
 public class Game implements GameManager {
-	private final Board board;
-	private final ArrayList<Player> players;
-	private int currentPlayerIndex;
-	private final ArrayList<Card> firePit;
-	private int turn;
-	private int splitDistance;
+    private final Board board;
+    private final ArrayList<Player> players;
+    private final ArrayList<Card> firePit;
+    private int currentPlayerIndex;
+    private int turn;
+    private int splitDistance;
 
-	public Game(String playerName) throws IOException {
-		turn = 0;
-		currentPlayerIndex = 0;
-		firePit = new ArrayList<>();
+    public Game(String playerName) throws IOException {
+        turn = 0;
+        currentPlayerIndex = 0;
+        firePit = new ArrayList<>();
 
-		ArrayList<Colour> colourOrder = new ArrayList<>();
+        ArrayList<Colour> colourOrder = new ArrayList<>(Arrays.asList(Colour.values()));
+        Collections.shuffle(colourOrder);
 
-		colourOrder.addAll(Arrays.asList(Colour.values()));
+        this.board = new Board(colourOrder, this);
+        Deck.loadCardPool(this.board, this);
 
-		Collections.shuffle(colourOrder);
+        this.players = new ArrayList<>();
+        this.players.add(new Player(playerName, colourOrder.get(0)));
+        for (int i = 1; i < 4; i++) {
+            this.players.add(new CPU("CPU " + i, colourOrder.get(i), this.board));
+        }
 
-		this.board = new Board(colourOrder, this);
+        for (Player player : players) {
+            player.setHand(Deck.drawCards());
+        }
+    }
 
-		Deck.loadCardPool(this.board, (GameManager) this);
+    public Board getBoard() {
+        return board;
+    }
 
-		this.players = new ArrayList<>();
-		this.players.add(new Player(playerName, colourOrder.get(0)));
+    public ArrayList<Player> getPlayers() {
+        return players;
+    }
 
-		for (int i = 1; i < 4; i++)
-			this.players.add(new CPU("CPU " + i, colourOrder.get(i), this.board));
+    public ArrayList<Card> getFirePit() {
+        return firePit;
+    }
 
-		for (int i = 0; i < 4; i++)
-			this.players.get(i).setHand(Deck.drawCards());
+    public void selectCard(Card card) throws InvalidCardException {
+        if (card == null) {
+            throw new InvalidCardException("Cannot select a null card");
+        }
+        players.get(currentPlayerIndex).selectCard(card);
+    }
 
-	}
+    public void selectMarble(Marble marble) throws InvalidMarbleException {
+        if (marble == null) {
+            throw new InvalidMarbleException("Cannot select null marble");
+        }
 
-	public Board getBoard() {
-		return board;
-	}
+        Player currentPlayer = players.get(currentPlayerIndex);
+        if (marble.getColour() != currentPlayer.getColour()) {
+            throw new InvalidMarbleException("Cannot select opponent's marble");
+        }
 
-	public ArrayList<Player> getPlayers() {
-		return players;
-	}
+        currentPlayer.selectMarble(marble);
+    }
 
-	public ArrayList<Card> getFirePit() {
-		return firePit;
-	}
+    public void deselectAll() {
+        players.get(currentPlayerIndex).deselectAll();
+    }
 
-	public void selectCard(Card card) throws InvalidCardException {
-		Player currentPlayer = players.get(currentPlayerIndex);
+    public void editSplitDistance(int splitDistance) throws SplitOutOfRangeException {
+        if (splitDistance < 1 || splitDistance > 6) {
+            throw new SplitOutOfRangeException("Split distance must be between 1 and 6 inclusive");
+        }
+        this.splitDistance = splitDistance;
+    }
 
-		if (card == null) {
-			throw new InvalidCardException("Cannot select a null card");
-		}
+    public boolean canPlayTurn() {
+        return !players.get(currentPlayerIndex).getHand().isEmpty();
+    }
 
-		if (!currentPlayer.getHand().contains(card)) {
-			throw new InvalidCardException("Selected card is not in player's hand");
-		}
+    public void playPlayerTurn() throws GameException {
+        Player currentPlayer = players.get(currentPlayerIndex);
 
-		currentPlayer.setSelectedCard(card);
-	}
+        if (!canPlayTurn()) {
+            endPlayerTurn();
+            return;
+        }
 
-	public void selectMarble(Marble marble) throws InvalidMarbleException {
-		if (marble == null) {
-			throw new InvalidMarbleException("Cannot select null marble");
-		}
+        currentPlayer.play();
+        endPlayerTurn();
+    }
 
-		Player currentPlayer = players.get(currentPlayerIndex);
-		Colour currentColour = currentPlayer.getColour();
+    public void endPlayerTurn() {
+        Player currentPlayer = players.get(currentPlayerIndex);
+        Card selectedCard = currentPlayer.getSelectedCard();
 
-		if (marble.getColour() != currentColour) {
-			throw new InvalidMarbleException("Cannot select opponent's marble");
-		}
+        if (selectedCard != null) {
+            currentPlayer.getHand().remove(selectedCard);
+            firePit.add(selectedCard);
+        }
 
-		currentPlayer.selectMarble(marble);
-	}
+        currentPlayer.deselectAll();
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
 
-	public void deselectAll() {
-		Player currentPlayer = players.get(currentPlayerIndex);
-		currentPlayer.deselectAll();
-	}
+        if (currentPlayerIndex == 0) {
+            turn++;
+            if (turn == 4) {
+                turn = 0;
+                for (Player player : players) {
+                    if (player.getHand().isEmpty() && Deck.getPoolSize() >= 4) {
+                        player.getHand().addAll(Deck.drawCards());
+                    }
+                }
 
-	public void editSplitDistance(int splitDistance) throws SplitOutOfRangeException {
-		if (splitDistance < 1 || splitDistance > 6) {
-			throw new SplitOutOfRangeException("Split distance must be between 1 and 6 inclusive");
-		}
-		this.splitDistance = splitDistance;
-	}
+                if (Deck.getPoolSize() < 4) {
+                    Deck.refillPool(firePit);
+                    firePit.clear();
+                }
+            }
+        }
+    }
 
-	public boolean canPlayTurn() {
-		Player currentPlayer = players.get(currentPlayerIndex);
-		return !currentPlayer.getHand().isEmpty();
-	}
+    public Colour checkWin() {
+        for (SafeZone safeZone : board.getSafeZones()) {
+            if (safeZone.isFull()) {
+                boolean allSameColour = true;
+                Colour colour = safeZone.getColour();
+                for (Cell cell : safeZone.getCells()) {
+                    Marble marble = cell.getMarble();
+                    if (marble == null || marble.getColour() != colour) {
+                        allSameColour = false;
+                        break;
+                    }
+                }
+                if (allSameColour) {
+                    return colour;
+                }
+            }
+        }
+        return null;
+    }
 
-	public void playPlayerTurn() throws GameException {
-		Player currentPlayer = players.get(currentPlayerIndex);
+    public void sendHome(Marble marble) {
+        if (marble == null) return;
+        for (Player player : players) {
+            if (player.getColour() == marble.getColour()) {
+                player.regainMarble(marble);
+                break;
+            }
+        }
+    }
 
-		if (!canPlayTurn()) {
-			endPlayerTurn();
-			return;
-		}
+    public void fieldMarble() throws CannotFieldException, IllegalDestroyException {
+        Player currentPlayer = players.get(currentPlayerIndex);
+        Marble marble = currentPlayer.getOneMarble();
 
-		currentPlayer.play();
-		endPlayerTurn();
-	}
+        if (marble == null) {
+            throw new CannotFieldException("No marbles to field");
+        }
 
-	public void endPlayerTurn() {
-		Player currentPlayer = players.get(currentPlayerIndex);
-		Card selectedCard = currentPlayer.getSelectedCard();
+        board.sendToBase(marble);
+        currentPlayer.getMarbles().remove(marble);
+    }
 
-		if (selectedCard != null) {
-			currentPlayer.getHand().remove(selectedCard);
-			firePit.add(selectedCard);
-		}
+    public void discardCard(Colour colour) throws CannotDiscardException {
+        for (Player player : players) {
+            if (player.getColour() == colour) {
+                if (player.getHand().isEmpty()) {
+                    throw new CannotDiscardException("Target player has no cards");
+                }
+                Random rand = new Random();
+                Card discarded = player.getHand().remove(rand.nextInt(player.getHand().size()));
+                firePit.add(discarded);
+                return;
+            }
+        }
+        throw new CannotDiscardException("No player with specified colour found");
+    }
 
-		currentPlayer.deselectAll();
-		currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+    public void discardCard() throws CannotDiscardException {
+        Colour current = getActivePlayerColour();
+        ArrayList<Colour> opponents = new ArrayList<>();
+        for (Player player : players) {
+            if (!player.getColour().equals(current) && !player.getHand().isEmpty()) {
+                opponents.add(player.getColour());
+            }
+        }
 
-		if (currentPlayerIndex == 0) {
-			turn++;
+        if (opponents.isEmpty()) {
+            throw new CannotDiscardException("No opponent has cards to discard");
+        }
 
-			if (turn == 4) {
-				turn = 0;
+        Random rand = new Random();
+        Colour target = opponents.get(rand.nextInt(opponents.size()));
+        discardCard(target);
+    }
 
-				for (Player player : players) {
-					if (player.getHand().isEmpty() && Deck.getPoolSize() >= 4) {
-						player.getHand().addAll(Deck.drawCards());
-					}
-				}
+    public Colour getActivePlayerColour() {
+        return players.get(currentPlayerIndex).getColour();
+    }
 
-				if (Deck.getPoolSize() < 4) {
-					Deck.refillPool(firePit);
-					firePit.clear();
-				}
-			}
-		}
-	}
-
-	public Colour checkWin() {
-		for (SafeZone safeZone : board.getSafeZones()) {
-			if (safeZone.isFull()) {
-				boolean allSameColour = true;
-				Colour safeZoneColour = safeZone.getColour();
-
-				for (Cell cell : safeZone.getCells()) {
-					Marble marble = cell.getMarble();
-					if (marble == null || marble.getColour() != safeZoneColour) {
-						allSameColour = false;
-						break;
-					}
-				}
-
-				if (allSameColour) {
-					return safeZoneColour;
-				}
-			}
-		}
-
-		return null;
-	}
-
-	public void sendHome(Marble marble) {
-		if (marble == null) {
-			return;
-		}
-
-		Colour marbleColour = marble.getColour();
-
-		for (Player player : players) {
-			if (player.getColour() == marbleColour) {
-				player.regainMarble(marble);
-				break;
-			}
-		}
-	}
-
-	public void fieldMarble() throws CannotFieldException, IllegalDestroyException {
-		Player currentPlayer = players.get(currentPlayerIndex);
-		Marble marble = null;
-		if (!currentPlayer.getMarbles().isEmpty()) {
-			marble = currentPlayer.getMarbles().get(0);
-		}
-
-		if (marble == null) {
-			throw new CannotFieldException("Cannot field a null marble");
-		}
-		board.sendToBase(marble);
-		currentPlayer.getMarbles().remove(marble);
-	}
-
-	public void discardCard(Colour colour) throws CannotDiscardException {
-		Player targetPlayer = null;
-		for (Player player : players) {
-			if (player.getColour() == colour) {
-				targetPlayer = player;
-				break;
-			}
-		}
-		if (targetPlayer == null) {
-			throw new CannotDiscardException("No player with the specified colour found");
-		}
-		ArrayList<Card> playerHand = targetPlayer.getHand();
-		if (playerHand.isEmpty()) {
-			throw new CannotDiscardException("Player has no cards to discard");
-		}
-		int randomIndex = (int) (Math.random() * playerHand.size());
-		Card discardedCard = playerHand.remove(randomIndex);
-		firePit.add(discardedCard);
-	}
-
-	public void discardCard() throws CannotDiscardException {
-		Colour current = getActivePlayerColour();
-		ArrayList<Colour> opponentColours = new ArrayList<>();
-
-		for (Player player : players) {
-			if (player.getColour() != current && !player.getHand().isEmpty()) {
-				opponentColours.add(player.getColour());
-			}
-		}
-
-		if (opponentColours.isEmpty()) {
-			throw new CannotDiscardException("No opponent has cards to discard");
-		}
-
-		int randomIndex = (int) (Math.random() * opponentColours.size());
-		discardCard(opponentColours.get(randomIndex));
-	}
-
-	public Colour getActivePlayerColour() {
-		return players.get(currentPlayerIndex).getColour();
-	}
-
-	public Colour getNextPlayerColour() {
-		int nextPlayerIndex = (currentPlayerIndex + 1) % players.size();
-		return players.get(nextPlayerIndex).getColour();
-	}
-
+    public Colour getNextPlayerColour() {
+        return players.get((currentPlayerIndex + 1) % players.size()).getColour();
+    }
 }
