@@ -54,9 +54,8 @@ public class Player {
     
     public Card getSelectedCard() {
         return selectedCard;
-    }
-    
-    
+   }
+      
     public void regainMarble(Marble marble) {
         if (marble != null && marble.getColour() == this.colour && !marbles.contains(marble)) {
             marbles.add(marble);
