@@ -14,20 +14,15 @@ public class Ten extends Standard {
 
     @Override
     public boolean validateMarbleSize(ArrayList<Marble> marbles) {
-        // Ten card does not require selecting marbles
         return marbles == null || marbles.isEmpty();
     }
 
     @Override
-    public void act(ArrayList<Marble> marbles)
-            throws ActionException, InvalidMarbleException {
-
+    public void act(ArrayList<Marble> marbles) throws ActionException, InvalidMarbleException {
         if (marbles != null && !marbles.isEmpty()) {
             throw new InvalidMarbleException("No marbles should be selected for the Ten card.");
         }
 
         gameManager.discardCard();
-        gameManager.skipTurn();
     }
-
 }

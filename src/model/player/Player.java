@@ -56,9 +56,6 @@ public class Player {
         return selectedCard;
     }
     
-    public void setSelectedCard(Card card) {
-        this.selectedCard = card;
-    }
     
     public void regainMarble(Marble marble) {
         if (marble != null && marble.getColour() == this.colour && !marbles.contains(marble)) {

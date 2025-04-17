@@ -29,7 +29,6 @@ public class Queen extends Standard {
         }
         return false;
     }
-    @Override
     public void act(ArrayList<Marble> marbles)
             throws ActionException, InvalidMarbleException, CannotDiscardException {
         if (!validateMarbleSize(marbles)) {
@@ -40,18 +39,13 @@ public class Queen extends Standard {
         }
 
         if (marbles == null || marbles.isEmpty()) {
-            // No marble selected: discard from a random opponent
-            gameManager.discardCard(); // Assumes GameManager handles selecting random opponent/card
+
+            gameManager.discardCard(); 
         } else {
-            // One opponent marble selected: discard from that specific opponent
             Marble targetMarble = marbles.get(0);
             Colour targetColour = targetMarble.getColour();
             gameManager.discardCard(targetColour);
         }
-        // Note: The prompt mentioned mirroring Ten's *skip effect*.
-        // Ten.java also calls gameManager.skipTurn(). If Queen should also skip,
-        // add gameManager.skipTurn(); here.
-        // Based on the prompt focusing on discard logic, skipTurn() is omitted for now.
     }
 
 }

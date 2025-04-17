@@ -6,6 +6,7 @@ import model.player.Marble;
 import java.util.ArrayList;
 import exception.*;
 
+
 public class Ace extends Standard {
 
     public Ace(String name, String description, Suit suit, BoardManager boardManager, GameManager gameManager) {
@@ -18,7 +19,6 @@ public class Ace extends Standard {
         return s == 0 || s == 1;
     }
     
-
     public void act(ArrayList<Marble> marbles)
             throws ActionException, InvalidMarbleException {
 

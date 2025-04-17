@@ -14,35 +14,33 @@ public class Seven extends Standard {
 
     @Override
     public boolean validateMarbleSize(ArrayList<Marble> marbles) {
-        // Allow selecting 1 or 2 marbles
         return marbles != null && (marbles.size() == 1 || marbles.size() == 2);
     }
 
-    public void act(ArrayList<Marble> marbles)
-            throws ActionException, InvalidMarbleException, SplitOutOfRangeException {
 
+    @Override
+    public void act(ArrayList<Marble> marbles) throws ActionException, InvalidMarbleException {
         if (marbles == null || marbles.isEmpty()) {
-            throw new InvalidMarbleException("At least one marble must be selected");
+            throw new InvalidMarbleException("At least one marble must be selected.");
         }
 
         if (marbles.size() == 1) {
-
-            Marble m = marbles.get(0);
-            boardManager.moveBy(m, 7, false);
+            Marble marble = marbles.get(0);
+            boardManager.moveBy(marble, 7, false);
         } else if (marbles.size() == 2) {
+            int splitDistance = boardManager.getSplitDistance();
+            Marble marble1 = marbles.get(0);
+            Marble marble2 = marbles.get(1);
 
-            int splitDistance = gameManager.editSplitDistance(7);
-
-            Marble m1 = marbles.get(0);
-            Marble m2 = marbles.get(1);
-
-
-            boardManager.moveBy(m1, splitDistance, false);
-
-            boardManager.moveBy(m2, 7 - splitDistance, false);
+            boardManager.moveBy(marble1, splitDistance, false);
+            boardManager.moveBy(marble2, 7 - splitDistance, false);
         } else {
-
-            throw new InvalidMarbleException("Invalid number of marbles selected for Seven card: " + marbles.size());
+            throw new InvalidMarbleException("Invalid number of marbles selected for the Seven card.");
         }
     }
+
+
+
+
+
 }

@@ -10,7 +10,7 @@ public class King extends Standard {
         super(name, description, 13, suit, boardManager, gameManager);
     }
 
-    @Override
+   
     public boolean validateMarbleSize(ArrayList<Marble> marbles) {
         int s = marbles == null ? 0 : marbles.size();
         return s == 0 || s == 1;
