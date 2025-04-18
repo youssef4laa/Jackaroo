@@ -1,5 +1,6 @@
 package model.card.standard;
 
+import model.Colour;            // <- add this
 import engine.GameManager;
 import engine.board.BoardManager;
 import model.player.Marble;
@@ -8,7 +9,8 @@ import exception.*;
 
 public class Ten extends Standard {
 
-    public Ten(String name, String description, Suit suit, BoardManager boardManager, GameManager gameManager) {
+    public Ten(String name, String description, Suit suit,
+               BoardManager boardManager, GameManager gameManager) {
         super(name, description, 10, suit, boardManager, gameManager);
     }
 
@@ -18,11 +20,16 @@ public class Ten extends Standard {
     }
 
     @Override
-    public void act(ArrayList<Marble> marbles) throws ActionException, InvalidMarbleException {
+    public void act(ArrayList<Marble> marbles)
+            throws ActionException, InvalidMarbleException {
         if (marbles != null && !marbles.isEmpty()) {
-            throw new InvalidMarbleException("No marbles should be selected for the Ten card.");
+            throw new InvalidMarbleException(
+                "No marbles should be selected for the Ten card.");
         }
 
-        gameManager.discardCard();
+        // target exactly the *next* player
+        Colour next = gameManager.getNextPlayerColour();
+        gameManager.discardCard(next);
     }
 }
+

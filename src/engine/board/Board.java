@@ -214,9 +214,11 @@ public class Board implements BoardManager {
 
 		Cell targetCell = fullPath.get(fullPath.size() - 1);
 		Marble targetMarble = targetCell.getMarble();
-		if (targetMarble != null && targetMarble.getColour() == currentPlayerColour) {
-			throw new IllegalMovementException("Target cell occupied by own marble");
+		// only block landing on own marble when NOT using a King card (destroy == false)
+		if (!destroy && targetMarble != null && targetMarble.getColour() == currentPlayerColour) {
+		    throw new IllegalMovementException("Target cell occupied by own marble");
 		}
+
 
 		int entryPos = getEntryPosition(marble.getColour());
 		if (entryPos != -1) {
