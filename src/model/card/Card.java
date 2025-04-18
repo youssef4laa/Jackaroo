@@ -42,10 +42,6 @@ public abstract class Card {
     }
     
     public abstract void act(ArrayList<Marble> marbles) throws ActionException, InvalidMarbleException;
-    
-    
-    
-
 
     
 }

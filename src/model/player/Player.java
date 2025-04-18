@@ -77,14 +77,17 @@ public class Player {
     }
 
     public void selectMarble(Marble marble) throws InvalidMarbleException {
-    if (selectedMarbles.size() >= 2) {
-        throw new InvalidMarbleException("Cannot select more than two marbles.");
+        // if they've already selected this exact marble, do nothing
+        if (selectedMarbles.contains(marble)) {
+            return;
+        }
+        // only allow up to 2 distinct marbles
+        if (selectedMarbles.size() >= 2) {
+            throw new InvalidMarbleException("Cannot select more than two marbles");
+        }
+        // (any other validation you already have here)
+        selectedMarbles.add(marble);
     }
-    if (marble == null || marble.getColour() != this.colour) {
-        throw new InvalidMarbleException("Selected marble does not belong to the current player.");
-    }
-    selectedMarbles.add(marble);
-}
 	
     public void deselectAll() {
         selectedCard = null;

@@ -91,8 +91,11 @@ public class Board implements BoardManager {
 			return -1;
 
 		for (int i = 0; i < safeZones.size(); i++) {
-			if (safeZones.get(i).getColour() == colour)
-				return (i * 25) + 23;
+			if (safeZones.get(i).getColour() == colour) {
+				int entry = (i * 25) - 2;
+				if (entry < 0) entry += track.size();
+				return entry;
+			}
 		}
 
 		return -1;
@@ -144,10 +147,21 @@ public class Board implements BoardManager {
 							throw new IllegalMovementException("Cannot bypass or land on own marbles with opponent");
 					}
 					ArrayList<Cell> safe = getSafeZone(marble.getColour());
-					if (safe == null || steps - stepsToEntry >= safe.size())
-						throw new IllegalMovementException("Movement exceeds safe zone length");
-					for (int i = 0; i < steps - stepsToEntry; i++)
-						path.add(safe.get(i));
+                    int stepsInSafeZone = steps - stepsToEntry;
+                    // Check if the required steps within the safe zone exceed its size.
+                    if (safe == null || stepsInSafeZone > safe.size())
+                        throw new IllegalMovementException("Movement exceeds safe zone length");
+                    
+                    // Add the required number of safe zone cells to the path.
+                    // We need to add cells from index 0 up to stepsInSafeZone-1 (inclusive)
+                    for (int i = 0; i < stepsInSafeZone; i++) {
+                        path.add(safe.get(i));
+                    }
+                    
+                    // Validate the path has at least the starting position and ending position
+                    if (path.size() < 2) {
+                        throw new IllegalMovementException("Invalid path construction");
+                    }
 					return path;
 				}
 			}

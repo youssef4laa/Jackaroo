@@ -92,6 +92,8 @@ public class Game implements GameManager {
         return !players.get(currentPlayerIndex).getHand().isEmpty();
     }
 
+
+
     public void playPlayerTurn() throws GameException {
         Player currentPlayer = players.get(currentPlayerIndex);
 
@@ -100,9 +102,14 @@ public class Game implements GameManager {
             return;
         }
 
+        if (currentPlayer.getSelectedCard() == null) {
+            throw new InvalidCardException("No card selected for playing turn");
+        }
+
         currentPlayer.play();
         endPlayerTurn();
     }
+
 
     public void endPlayerTurn() {
         Player currentPlayer = players.get(currentPlayerIndex);
@@ -118,21 +125,23 @@ public class Game implements GameManager {
 
         if (currentPlayerIndex == 0) {
             turn++;
+
             if (turn == 4) {
                 turn = 0;
-                for (Player player : players) {
-                    if (player.getHand().isEmpty() && Deck.getPoolSize() >= 4) {
-                        player.getHand().addAll(Deck.drawCards());
-                    }
-                }
 
                 if (Deck.getPoolSize() < 4) {
                     Deck.refillPool(firePit);
                     firePit.clear();
                 }
+
+                for (Player player : players) {
+                    player.getHand().clear(); // Clear the hand completely
+                    player.getHand().addAll(Deck.drawCards()); // Draw 4 new cards
+                }
             }
         }
     }
+
 
     public Colour checkWin() {
         for (SafeZone safeZone : board.getSafeZones()) {
