@@ -89,25 +89,15 @@ public class Game implements GameManager {
     }
 
     public boolean canPlayTurn() {
-        return !players.get(currentPlayerIndex).getHand().isEmpty();
-    }
+        Player currentPlayer = players.get(currentPlayerIndex);
+        return currentPlayer.getHand().size() == (4-turn);
+        }
 
 
 
     public void playPlayerTurn() throws GameException {
         Player currentPlayer = players.get(currentPlayerIndex);
-
-        if (!canPlayTurn()) {
-            endPlayerTurn();
-            return;
-        }
-
-        if (currentPlayer.getSelectedCard() == null) {
-            throw new InvalidCardException("No card selected for playing turn");
-        }
-
         currentPlayer.play();
-        endPlayerTurn();
     }
 
 
