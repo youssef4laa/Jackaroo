@@ -253,35 +253,41 @@ public class Board implements BoardManager {
 	}
 
 	private void move(Marble marble, ArrayList<Cell> fullPath, boolean destroy) throws IllegalDestroyException {
-		if (marble == null || fullPath == null || fullPath.isEmpty())
-			return;
+	    if (marble == null || fullPath == null || fullPath.isEmpty())
+	        return;
 
-		Cell currentCell = findCurrentCell(marble);
-		if (currentCell != null)
-			currentCell.setMarble(null);
+	    // 1) Remove marble from its current cell
+	    Cell currentCell = findCurrentCell(marble);
+	    if (currentCell != null) {
+	        currentCell.setMarble(null);
+	    }
 
-		Cell targetCell = fullPath.get(fullPath.size() - 1);
-		Marble targetMarble = targetCell.getMarble();
+	    // 2) Handle any collision at the target (King vs normal)
+	    Cell targetCell = fullPath.get(fullPath.size() - 1);
+	    Marble occupant = targetCell.getMarble();
 
-		if (targetMarble != null) {
-			if (destroy) {
-				int trackPos = track.indexOf(targetCell);
-				if (trackPos != -1)
-					validateDestroy(trackPos);
-				targetCell.setMarble(null);
-			} else {
-				throw new IllegalDestroyException("Cannot move to occupied cell without King card");
-			}
-		}
+	    if (occupant != null) {
+	        if (destroy) {
+	            int pos = track.indexOf(targetCell);
+	            if (pos != -1) validateDestroy(pos);
+	            targetCell.setMarble(null);
+	        } else {
+	            throw new IllegalDestroyException("Cannot move to occupied cell without King card");
+	        }
+	    }
 
-		targetCell.setMarble(marble);
+	    // 3) Place our marble on the target
+	    targetCell.setMarble(marble);
 
-		if (targetCell.isTrap()) {
-			targetCell.setTrap(false);
-			destroyMarble(marble);
-			assignTrapCell();
-		}
+	    // 4) If it's a trap: first assign the NEW trap (old trap still active),
+	    //    then deactivate this one, then destroy the marble
+	    if (targetCell.isTrap()) {
+	        assignTrapCell();          // picks a Normal non‑trap cell (old trap still true)
+	        targetCell.setTrap(false); // now retire the old trap
+	        destroyMarble(marble);     // send marble home
+	    }
 	}
+
 
 	private void validateSwap(Marble marble1, Marble marble2) throws IllegalSwapException {
 		if (marble1 == null || marble2 == null) {
@@ -476,13 +482,14 @@ public class Board implements BoardManager {
 	}
 
 	private void assignTrapCell() {
-		int randIndex;
-		do {
-			randIndex = (int) (Math.random() * track.size());
-		} while (track.get(randIndex).getCellType() != CellType.NORMAL || track.get(randIndex).isTrap());
-
-		track.get(randIndex).setTrap(true);
+	    int randIndex;
+	    do {
+	        randIndex = (int)(Math.random()*track.size());
+	    } while (track.get(randIndex).getCellType()!=CellType.NORMAL
+	          || track.get(randIndex).isTrap());
+	    track.get(randIndex).setTrap(true);
 	}
+
 
 	private SafeZone getSafeZone(Cell cell) {
 		for (SafeZone safeZone : safeZones) {

@@ -24,9 +24,6 @@ public class Standard extends Card {
         return suit;
     }
 
-    public boolean validateMarbleSize(ArrayList<Marble> marbles) {
-        return marbles != null && marbles.size() == 1;
-    }
     @Override
     public void act(ArrayList<Marble> marbles) throws ActionException, InvalidMarbleException {
         if (marbles == null || marbles.size() != 1) {

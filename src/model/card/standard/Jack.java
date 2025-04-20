@@ -13,9 +13,9 @@ public class Jack extends Standard {
         super(name, description, 11, suit, boardManager, gameManager);
     }
 
-    @Override
     public boolean validateMarbleSize(ArrayList<Marble> marbles) {
-        return marbles != null && marbles.size() == 2;
+        int n = (marbles == null ? 0 : marbles.size());
+        return n == 1 || n == 2;
     }
     @Override
     public boolean validateMarbleColours(ArrayList<Marble> marbles) {
@@ -37,13 +37,22 @@ public class Jack extends Standard {
 
     @Override
     public void act(ArrayList<Marble> marbles)
-            throws ActionException, InvalidMarbleException, IllegalSwapException {
+            throws ActionException, InvalidMarbleException, IllegalMovementException, IllegalSwapException {
 
+        // Reject 0 or >2 marbles
         if (!validateMarbleSize(marbles)) {
-            throw new InvalidMarbleException("Exactly two marbles must be selected for the Jack card.");
+            throw new InvalidMarbleException(
+                "Jack requires exactly one marble to move or two to swap."
+            );
         }
 
-        boardManager.swap(marbles.get(0), marbles.get(1));
+        if (marbles.size() == 1) {
+            // Move that one marble 11 steps, no destroy
+            boardManager.moveBy(marbles.get(0), 11, /* destroy= */ false);
+        } else {
+            // Swap the two marbles
+            boardManager.swap(marbles.get(0), marbles.get(1));
+        }
     }
 
 }

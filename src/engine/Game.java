@@ -21,7 +21,6 @@ public class Game implements GameManager {
     private final ArrayList<Card> firePit;
     private int currentPlayerIndex;
     private int turn;
-    private int splitDistance;
 
     public Game(String playerName) throws IOException {
         turn = 0;
@@ -82,11 +81,17 @@ public class Game implements GameManager {
     }
 
     public void editSplitDistance(int splitDistance) throws SplitOutOfRangeException {
+        // Valid splitDistance is 1–6 inclusive
         if (splitDistance < 1 || splitDistance > 6) {
-            throw new SplitOutOfRangeException("Split distance must be between 1 and 6 inclusive");
+            throw new SplitOutOfRangeException(
+                "Split distance must be between 1 and 6 inclusive; received: " + splitDistance
+            );
         }
-        this.splitDistance = splitDistance;
+        // Apply to board
+        board.setSplitDistance(splitDistance);
     }
+
+
 
     public boolean canPlayTurn() {
         Player currentPlayer = players.get(currentPlayerIndex);
