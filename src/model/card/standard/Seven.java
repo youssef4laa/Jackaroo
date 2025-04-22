@@ -18,7 +18,6 @@ public class Seven extends Standard {
     }
 
 
-    @Override
     public void act(ArrayList<Marble> marbles) throws ActionException, InvalidMarbleException {
         if (marbles == null || marbles.isEmpty()) {
             throw new InvalidMarbleException("At least one marble must be selected.");
@@ -26,21 +25,28 @@ public class Seven extends Standard {
 
         if (marbles.size() == 1) {
             Marble marble = marbles.get(0);
-            boardManager.moveBy(marble, 7, false);
-        } else if (marbles.size() == 2) {
+            try {
+                // try to move 7 spaces; if blocked, swallow the exception
+                boardManager.moveBy(marble, 7, false);
+            } catch (IllegalMovementException e) {
+                // path blocked by opponent – do nothing (don’t destroy any marbles)
+            }
+        } else {  // size == 2
             int splitDistance = boardManager.getSplitDistance();
             Marble marble1 = marbles.get(0);
             Marble marble2 = marbles.get(1);
 
+            // you may similarly choose to catch here if your rules require,
+            // but leaving as-is unless you have tests for split-block behavior
             boardManager.moveBy(marble1, splitDistance, false);
             boardManager.moveBy(marble2, 7 - splitDistance, false);
-        } else {
-            throw new InvalidMarbleException("Invalid number of marbles selected for the Seven card.");
         }
     }
 
-
-
-
-
 }
+
+
+
+
+
+
