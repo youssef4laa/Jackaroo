@@ -98,8 +98,6 @@ public class Game implements GameManager {
         return currentPlayer.getHand().size() == (4-turn);
         }
 
-
-
     public void playPlayerTurn() throws GameException {
         Player currentPlayer = players.get(currentPlayerIndex);
         currentPlayer.play();

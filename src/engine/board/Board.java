@@ -254,6 +254,7 @@ private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destr
 		previousCell = currentCell;
 	}
 }
+
 	private void move(Marble marble, ArrayList<Cell> fullPath, boolean destroy)
 	        throws IllegalDestroyException {
 	    if (marble == null || fullPath == null || fullPath.isEmpty()) return;
