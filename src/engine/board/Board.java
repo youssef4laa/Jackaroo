@@ -344,29 +344,28 @@ private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destr
 		}
 	}
 
-	private void validateSaving(int positionInSafeZone, int positionOnTrack) throws InvalidMarbleException {
-		if (positionOnTrack < 0 || positionOnTrack >= track.size()) {
-			throw new InvalidMarbleException("Invalid position on track: " + positionOnTrack);
-		}
+	private void validateSaving(int positionInSafeZone, int positionOnTrack)
+	        throws InvalidMarbleException {
+	    Marble marble;
+	    try {
+	        marble = track.get(positionOnTrack).getMarble();
+	    } catch (IndexOutOfBoundsException e) {
+	        throw new InvalidMarbleException("Selected marble was not on the track");
+	    }
+	    if (marble == null) {
+	        throw new InvalidMarbleException("Selected marble was not on the track");
+	    }
 
-		Cell trackCell = track.get(positionOnTrack);
-		Marble marble = trackCell.getMarble();
-
-		if (marble == null || marble.getColour() != gameManager.getActivePlayerColour()) {
-			throw new InvalidMarbleException("Invalid marble at the specified position");
-		}
-
-		for (SafeZone safeZone : safeZones) {
-			if (safeZone.getCells().stream().anyMatch(cell -> cell.getMarble() == marble)) {
-				throw new InvalidMarbleException("Marble is already in a safe zone");
-			}
-		}
-
-		if (positionInSafeZone < 0 || positionInSafeZone >= getSafeZoneSize()) {
-			throw new InvalidMarbleException("Invalid position in safe zone: " + positionInSafeZone);
-		}
-		
+	    for (Cell c : getSafeZone(marble.getColour())) {
+	        if (c.getMarble() == marble) {
+	            throw new InvalidMarbleException("Selected marble is already in the Safe Zone");
+	        }
+	    }
 	}
+
+
+
+
 
 	public void moveBy(Marble marble, int steps, boolean destroy)
 			throws IllegalMovementException, IllegalDestroyException {

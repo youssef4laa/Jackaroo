@@ -6,6 +6,7 @@ import exception.GameException;
 import exception.InvalidCardException;
 import exception.InvalidMarbleException;
 import model.Colour;
+import exception.ActionException;
 import model.card.Card;
 
 @SuppressWarnings("unused")
@@ -94,23 +95,29 @@ public class Player {
         selectedMarbles.clear();
     }
 
-    public void play() throws GameException {
-        if (selectedCard == null) {
-            throw new InvalidCardException("No card has been selected.");
-        }
 
-        ArrayList<Marble> marblesToActOn = new ArrayList<>(selectedMarbles);
+public void play() throws InvalidCardException, InvalidMarbleException, ActionException {
+	    if (selectedCard == null)
+	        throw new InvalidCardException("No card is selected for play");
 
-        if (!selectedCard.validateMarbleSize(marblesToActOn)) {
-            throw new InvalidMarbleException("Invalid number of selected marbles for this card.");
-        }
+	    try {
+	        if (!selectedCard.validateMarbleSize(selectedMarbles))
+	            throw new InvalidMarbleException("Selected marbles size is invalid for this card");
 
-        if (!selectedCard.validateMarbleColours(marblesToActOn)) {
-            throw new InvalidMarbleException("Invalid marble colours for the selected card.");
-        }
+	        if (!selectedCard.validateMarbleColours(selectedMarbles))
+	            throw new InvalidMarbleException("Selected marbles colors are invalid");
 
-        selectedCard.act(marblesToActOn);
-    }
+	        selectedCard.act(selectedMarbles);
+
+	    } catch (InvalidMarbleException e) {
+	        throw e;
+	    } catch (ActionException e) {
+	        throw e;
+	    } catch (Exception e) {
+	        throw new InvalidMarbleException("Unexpected error in play " + e.getMessage());
+	    }
+	}
+
 
     
     
