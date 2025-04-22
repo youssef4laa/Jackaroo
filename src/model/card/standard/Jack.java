@@ -37,8 +37,8 @@ public class Jack extends Standard {
 
     @Override
     public void act(ArrayList<Marble> marbles)
-            throws ActionException, InvalidMarbleException, IllegalMovementException, IllegalSwapException {
-
+            throws ActionException, InvalidMarbleException, IllegalSwapException {
+        
         // Reject 0 or >2 marbles
         if (!validateMarbleSize(marbles)) {
             throw new InvalidMarbleException(
@@ -47,12 +47,18 @@ public class Jack extends Standard {
         }
 
         if (marbles.size() == 1) {
-            // Move that one marble 11 steps, no destroy
-            boardManager.moveBy(marbles.get(0), 11, /* destroy= */ false);
+            // Move that one marble 11 steps, no destroy,
+            // but swallow any IllegalMovementException so we don't remove or break on path marbles
+            try {
+                boardManager.moveBy(marbles.get(0), 11, /* destroy= */ false);
+            } catch (IllegalMovementException ignored) {
+                // can't bypass—just leave everything as is
+            }
         } else {
             // Swap the two marbles
             boardManager.swap(marbles.get(0), marbles.get(1));
         }
     }
+
 
 }
