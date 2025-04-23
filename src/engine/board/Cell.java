@@ -36,5 +36,30 @@ public class Cell {
 	public void setTrap(boolean trap) {
 		this.trap = trap;
 	}
+	public boolean isBaseCell() {
+	    return cellType == CellType.BASE;
+	}
+
+	public boolean isSafeZone() {
+	    return cellType == CellType.SAFE;
+	}
+
+	public boolean isSafeZoneEntry() {
+	    return cellType == CellType.ENTRY;
+	}
+
+	public boolean isOccupied() {
+	    return marble != null;
+	}
+
+	public boolean hasSamePlayerMarble(Marble marble) {
+	    return this.marble != null && this.marble.getColour().equals(marble.getColour());
+	}
+
+	public boolean hasOpponentMarble(Marble marble) {
+	    return this.marble != null && !this.marble.getColour().equals(marble.getColour());
+	}
+
+	
 
 }
