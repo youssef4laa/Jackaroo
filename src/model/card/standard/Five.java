@@ -19,20 +19,27 @@ public class Five extends Standard {
     @Override
     public boolean validateMarbleColours(ArrayList<Marble> marbles) {
         // Must be an opponent’s marble
-        return validateMarbleSize(marbles)
+        // Ensure list is valid, has one non-null marble, and it's an opponent's
+        return validateMarbleSize(marbles) // Checks marbles != null && marbles.size() == 1
+            && marbles.get(0) != null // Explicitly check the marble is not null
             && marbles.get(0).getColour() != gameManager.getActivePlayerColour();
     }
 
     @Override
     public void act(ArrayList<Marble> marbles)
             throws ActionException, InvalidMarbleException {
-        if (!validateMarbleSize(marbles)) {
-            throw new InvalidMarbleException("Exactly one marble must be selected");
+        // Validate size and non-null marble first
+        if (!validateMarbleSize(marbles) || marbles.get(0) == null) {
+            throw new InvalidMarbleException("Exactly one valid marble must be selected");
         }
+        
         Marble m = marbles.get(0);
+        
+        // Validate color (opponent's marble)
         if (m.getColour() == gameManager.getActivePlayerColour()) {
             throw new InvalidMarbleException("You must select an opponent's marble");
         }
+        
         // move that marble forward by 5 steps, never destroying its own
         boardManager.moveBy(m, getRank(), false);
     }
