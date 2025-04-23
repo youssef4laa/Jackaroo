@@ -8293,103 +8293,103 @@ public class Milestone2PublicTests {
 	}
 
 
-	
-		@Test(timeout=1000)
-		public void testActBurnerDestroyMarble(){
-	
-			try {		
-				Class<?> gameClass = Class.forName(gamePath);
-				Constructor<?> gameConstructor = Class.forName(gamePath).getConstructor(String.class);
-	
-				int randomNum = (int) (Math.random() * 4) + 1;
-				Object game = gameConstructor.newInstance("PlayerName" + randomNum);
-	
-				Field board_field = Class.forName(gamePath).getDeclaredField("board");
-				board_field.setAccessible(true);
-				Object board = board_field.get(game);
-	
-	
-				Field playerField= Class.forName(gamePath).getDeclaredField("players");
-				playerField.setAccessible(true);
-				ArrayList<Object> players = (ArrayList<Object>) playerField.get(game);
-	
-				Object player = players.get(0);
-	
-	
-				Field playerColourField = Class.forName(playerPath).getDeclaredField("colour");
-				playerColourField.setAccessible(true);
-	
-				ArrayList<Object> colours = new ArrayList<Object>();
-				for(int i=0;i<players.size();i++){
-					colours.add( playerColourField.get(players.get(i)));
-				}
-	
-				int currentPlayerIndex = 0;
-				Field current_field = gameClass.getDeclaredField("currentPlayerIndex");
-				current_field.setAccessible(true);
-				current_field.set(game,currentPlayerIndex );
-	
-				Field players_field = gameClass.getDeclaredField("players");
-				players_field.setAccessible(true);
-				players_field.set(game,players);
-	
-	
-				Class<?> marbleClass = Class.forName(marblePath);
-				Class<?> colourClass = Class.forName(colourPath);
-	
-	
-				Object redColour = Enum.valueOf((Class<Enum>) colourClass, "RED");
-	
-				Constructor<?> marbleConstructor = marbleClass.getConstructor(colourClass);
-				Object marbleInstance = marbleConstructor.newInstance(redColour);
-	
-	
-				Class cell_type_class = Class.forName(cellTypePath);
-				Constructor<?> cell_constructor = Class.forName(cellPath).getConstructor(cell_type_class);
-	
-				Field track_field = Class.forName(boardPath).getDeclaredField("track");
-				track_field.setAccessible(true);
-	
-				ArrayList<Object> track = (ArrayList<Object>) track_field.get(board);
-				Object cell_object = null;
-				Object new_cell_object = null;
-	
-				int positionInPath = 3;
-				Field marbleField = track.get(positionInPath).getClass().getDeclaredField("marble");
-				marbleField.setAccessible(true);
-				marbleField.set(track.get(positionInPath),marbleInstance);
-	
-	
-	
-				track_field.set(board, track);
-	
-	
-				Class<?> boardClass = Class.forName(boardPath);
-				ArrayList<Object> trackreturnValue =  (ArrayList<Object>) track_field.get(board);
-	
-	
-				Constructor<?> cardConstructor = Class.forName(burnerPath).getConstructor(String.class,String.class,
-						Class.forName(boardManagerPath),Class.forName(gameManagerPath));
-				Object card = cardConstructor.newInstance("Burner","description",board,game);
-	
-				ArrayList<Object> marbles = new ArrayList<Object>();
-				marbles.add(marbleInstance);
-	
-				Method actMethod=Class.forName(burnerPath).getDeclaredMethod("act",  ArrayList.class);
-				actMethod.setAccessible(true);
-				actMethod.invoke(card,marbles);
-	
-				Object m = marbleField.get(track.get(positionInPath));
-	
-				assertEquals("Act method should call destroyMarble in class board.",null,m);
-	
-	
-			}catch (NoSuchMethodException | SecurityException | ClassNotFoundException | 
-					InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException e) {
-				fail(e.getClass()+" occurred while accessing method act in class Card.");
+
+	@Test(timeout=1000)
+	public void testActBurnerDestroyMarble(){
+
+		try {		
+			Class<?> gameClass = Class.forName(gamePath);
+			Constructor<?> gameConstructor = Class.forName(gamePath).getConstructor(String.class);
+
+			int randomNum = (int) (Math.random() * 4) + 1;
+			Object game = gameConstructor.newInstance("PlayerName" + randomNum);
+
+			Field board_field = Class.forName(gamePath).getDeclaredField("board");
+			board_field.setAccessible(true);
+			Object board = board_field.get(game);
+
+
+			Field playerField= Class.forName(gamePath).getDeclaredField("players");
+			playerField.setAccessible(true);
+			ArrayList<Object> players = (ArrayList<Object>) playerField.get(game);
+
+			Object player = players.get(0);
+
+
+			Field playerColourField = Class.forName(playerPath).getDeclaredField("colour");
+			playerColourField.setAccessible(true);
+
+			ArrayList<Object> colours = new ArrayList<Object>();
+			for(int i=0;i<players.size();i++){
+				colours.add( playerColourField.get(players.get(i)));
 			}
-	
+
+			int currentPlayerIndex = 0;
+			Field current_field = gameClass.getDeclaredField("currentPlayerIndex");
+			current_field.setAccessible(true);
+			current_field.set(game,currentPlayerIndex );
+
+			Field players_field = gameClass.getDeclaredField("players");
+			players_field.setAccessible(true);
+			players_field.set(game,players);
+
+
+			Class<?> marbleClass = Class.forName(marblePath);
+			Class<?> colourClass = Class.forName(colourPath);
+
+
+			Object redColour = Enum.valueOf((Class<Enum>) colourClass, "RED");
+
+			Constructor<?> marbleConstructor = marbleClass.getConstructor(colourClass);
+			Object marbleInstance = marbleConstructor.newInstance(redColour);
+
+
+			Class cell_type_class = Class.forName(cellTypePath);
+			Constructor<?> cell_constructor = Class.forName(cellPath).getConstructor(cell_type_class);
+
+			Field track_field = Class.forName(boardPath).getDeclaredField("track");
+			track_field.setAccessible(true);
+
+			ArrayList<Object> track = (ArrayList<Object>) track_field.get(board);
+			Object cell_object = null;
+			Object new_cell_object = null;
+
+			int positionInPath = 3;
+			Field marbleField = track.get(positionInPath).getClass().getDeclaredField("marble");
+			marbleField.setAccessible(true);
+			marbleField.set(track.get(positionInPath),marbleInstance);
+
+
+
+			track_field.set(board, track);
+
+
+			Class<?> boardClass = Class.forName(boardPath);
+			ArrayList<Object> trackreturnValue =  (ArrayList<Object>) track_field.get(board);
+
+
+			Constructor<?> cardConstructor = Class.forName(burnerPath).getConstructor(String.class,String.class,
+					Class.forName(boardManagerPath),Class.forName(gameManagerPath));
+			Object card = cardConstructor.newInstance("Burner","description",board,game);
+
+			ArrayList<Object> marbles = new ArrayList<Object>();
+			marbles.add(marbleInstance);
+
+			Method actMethod=Class.forName(burnerPath).getDeclaredMethod("act",  ArrayList.class);
+			actMethod.setAccessible(true);
+			actMethod.invoke(card,marbles);
+
+			Object m = marbleField.get(track.get(positionInPath));
+
+			assertEquals("Act method should call destroyMarble in class board.",null,m);
+
+
+		}catch (NoSuchMethodException | SecurityException | ClassNotFoundException | 
+				InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException e) {
+			fail(e.getClass()+" occurred while accessing method act in class Card.");
 		}
+
+	}
 
 	@Test(timeout=1000)
 	public void testPlayPlayerTurnGameBurner(){
