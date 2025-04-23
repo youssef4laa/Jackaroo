@@ -202,9 +202,12 @@ private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destr
 		Marble m = cell.getMarble();
 		if (m != null) {
 			blockerCount++;
-			if (m.getColour() == currentPlayerColour) {
+			// Modified check: Only throw if destroy is false and it's an own marble
+			if (!destroy && m.getColour() == currentPlayerColour) {
 				throw new IllegalMovementException("Path blocked by own marble");
 			}
+			// Keep the check for opponent marbles if needed by rules, or remove if handled elsewhere
+			// Example: if (m.getColour() != currentPlayerColour) { /* logic for opponent */ }
 		}
 	}
 
@@ -212,12 +215,12 @@ private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destr
 		throw new IllegalMovementException("Path is blocked by two or more marbles");
 	}
 
-	Cell targetCell = fullPath.get(fullPath.size() - 1);
-	Marble targetMarble = targetCell.getMarble();
-	// only block landing on own marble when NOT using a King card (destroy == false)
-	if (!destroy && targetMarble != null && targetMarble.getColour() == currentPlayerColour) {
-	    throw new IllegalMovementException("Target cell occupied by own marble");
-	}
+	// Removed redundant check for target cell, as validateMarbleInteraction handles it
+	// Cell targetCell = fullPath.get(fullPath.size() - 1);
+	// Marble targetMarble = targetCell.getMarble();
+	// if (!destroy && targetMarble != null && targetMarble.getColour() == currentPlayerColour) {
+	//     throw new IllegalMovementException("Target cell occupied by own marble");
+	// }
 
 
 	int entryPos = getEntryPosition(marble.getColour());
@@ -234,13 +237,14 @@ private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destr
 		Cell currentCell = fullPath.get(i);
 
 		// Modified check: Only block Base cell movement when not using a King card
-		if (currentCell.getCellType() == CellType.BASE 
+		if (currentCell.getCellType() == CellType.BASE
 			&& currentCell.getMarble() != null
-			&& currentCell.getMarble().getColour() != currentPlayerColour 
+			&& currentCell.getMarble().getColour() != currentPlayerColour
 			&& !destroy) {
 			throw new IllegalMovementException("Path is blocked by opponent's marble in Base Cell");
 		}
 
+		// Pass destroy flag to interaction validation
 		validateMarbleInteraction(currentCell, destroy, i, fullPath.size());
 
 		if (currentCell.getCellType() == CellType.ENTRY) {
@@ -555,7 +559,8 @@ private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destr
 		Marble targetMarble = currentCell.getMarble();
 		if (targetMarble != null) {
 			Colour currentPlayerColour = gameManager.getActivePlayerColour();
-			if (targetMarble.getColour() == currentPlayerColour) {
+			// Modified check: Only throw if destroy is false and it's an own marble
+			if (!destroy && targetMarble.getColour() == currentPlayerColour) {
 				throw new IllegalMovementException("Cannot bypass or land on own marbles");
 			}
 
