@@ -235,16 +235,27 @@ private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destr
 	Cell previousCell = fullPath.get(0);
 	for (int i = 1; i < fullPath.size(); i++) {
 		Cell currentCell = fullPath.get(i);
+		Marble cellMarble = currentCell.getMarble(); // Get marble once for efficiency
 
-		// Modified check: Only block Base cell movement when not using a King card
+		// --- BEGIN EDIT ---
+		// NEW CHECK: Always illegal to path through or land on own occupied base cell
+		if (currentCell.getCellType() == CellType.BASE &&
+			cellMarble != null &&
+			cellMarble.getColour() == currentPlayerColour) { // Check if it's the player's own base cell marble
+			throw new IllegalMovementException("Cannot bypass or land on own occupied base cell");
+		}
+		// --- END EDIT ---
+
+		// Existing check: Only block opponent's Base cell movement when not using a King card
 		if (currentCell.getCellType() == CellType.BASE
-			&& currentCell.getMarble() != null
-			&& currentCell.getMarble().getColour() != currentPlayerColour
-			&& !destroy) {
+			&& cellMarble != null // Use the variable we already got
+			&& cellMarble.getColour() != currentPlayerColour // Opponent's marble
+			&& !destroy) { // Only if destroy is false
 			throw new IllegalMovementException("Path is blocked by opponent's marble in Base Cell");
 		}
 
 		// Pass destroy flag to interaction validation
+		// Note: validateMarbleInteraction already handles general cases based on 'destroy'
 		validateMarbleInteraction(currentCell, destroy, i, fullPath.size());
 
 		if (currentCell.getCellType() == CellType.ENTRY) {
@@ -559,18 +570,26 @@ private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destr
 		Marble targetMarble = currentCell.getMarble();
 		if (targetMarble != null) {
 			Colour currentPlayerColour = gameManager.getActivePlayerColour();
-			// Modified check: Only throw if destroy is false and it's an own marble
-			if (!destroy && targetMarble.getColour() == currentPlayerColour) {
-				throw new IllegalMovementException("Cannot bypass or land on own marbles");
+
+			// --- BEGIN EDIT ---
+			// Check added in validatePath loop handles own base cell, so this check is sufficient here.
+			// It prevents landing/bypassing own marbles *outside* the base cell if destroy is false.
+			if (!destroy && targetMarble.getColour() == currentPlayerColour && currentCell.getCellType() != CellType.BASE) {
+				throw new IllegalMovementException("Cannot bypass or land on own marbles (outside base)");
 			}
+			// --- END EDIT ---
+
 
 			if (isCellInSafeZone(currentCell)) {
+				// Assuming interaction is never allowed in safe zones
 				throw new IllegalMovementException("Cannot interact with marbles in Safe Zone");
 			}
 
-			if (!destroy && index < pathSize - 1) {
+			// Check for bypassing opponent marble without King card (applies to intermediate cells)
+			if (!destroy && index < pathSize - 1 && targetMarble.getColour() != currentPlayerColour) {
 				throw new IllegalMovementException("Cannot bypass opponent's marble without King card");
 			}
+			// Landing on opponent marble is handled by move() or implicitly allowed if destroy=true
 		}
 	}
 
