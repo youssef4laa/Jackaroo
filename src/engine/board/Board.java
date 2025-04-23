@@ -299,33 +299,20 @@ public class Board implements BoardManager {
 			throw new IllegalSwapException("Cannot swap with an opponent's marble that is safe in its base cell");
 		}
 	}
-	private void validateDestroy(int positionInPath) throws IllegalDestroyException {
-	    // Check if position is within bounds
-	    if (positionInPath < 0 || positionInPath >= track.size()) {
-	        throw new IllegalDestroyException("Invalid position: out of bounds.");
-	    }
+	private void validateDestroy(int pos) throws IllegalDestroyException {
+        if (pos < 0 || pos >= track.size())
+            throw new IllegalDestroyException("Invalid index");
 
-	    Cell cell = track.get(positionInPath);
-	    Marble marble = cell.getMarble();
+        Cell cell = track.get(pos);
 
-	    // Case 1: No marble exists at the position
-	    if (marble == null) {
-	        throw new IllegalDestroyException("No marble found at the given track position.");
-	    }
+        if (cell.getCellType() == CellType.BASE) {
+            Marble occupying = cell.getMarble();
 
-	    // Case 2: Marble is in its own Base Cell (protected from destruction)
-	    if (cell.getCellType() == CellType.BASE) {
-	        Colour marbleColour = marble.getColour();
-	        int basePosition = getBasePosition(marbleColour);
-
-	        // Only if the position is the base cell for the marble's colour
-	        if (positionInPath == basePosition) {
-	            throw new IllegalDestroyException("Marble is protected in its own Base Cell.");
-	        }
-	    }
-
-	    // Otherwise, destruction is valid — do nothing
-	}
+            if (occupying != null && !occupying.getColour().equals(gameManager.getActivePlayerColour())) {
+                throw new IllegalDestroyException("Cannot destroy marble in opponent's base");
+            }
+        }
+    }
 
 
 
