@@ -103,14 +103,22 @@ public class Game implements GameManager {
         currentPlayer.play();
     }
 
-
     public void endPlayerTurn() {
         Player currentPlayer = players.get(currentPlayerIndex);
         Card selectedCard = currentPlayer.getSelectedCard();
 
         if (selectedCard != null) {
-            currentPlayer.getHand().remove(selectedCard);
-            firePit.add(selectedCard);
+            if (currentPlayer.getHand().contains(selectedCard)) {
+                currentPlayer.getHand().remove(selectedCard);
+                firePit.add(selectedCard);
+            }
+        } else {
+            // No card selected, so default to the first card in hand (if available)
+            if (!currentPlayer.getHand().isEmpty()) {
+                Card defaultCard = currentPlayer.getHand().get(0);
+                currentPlayer.getHand().remove(defaultCard);
+                firePit.add(defaultCard);
+            }
         }
 
         currentPlayer.deselectAll();
@@ -122,18 +130,21 @@ public class Game implements GameManager {
             if (turn == 4) {
                 turn = 0;
 
-                if (Deck.getPoolSize() < players.size()*4) {
+                if (Deck.getPoolSize() < players.size() * 4) {
                     Deck.refillPool(firePit);
                     firePit.clear();
                 }
 
                 for (Player player : players) {
-                    player.getHand().clear(); // Clear the hand completely
-                    player.getHand().addAll(Deck.drawCards()); // Draw 4 new cards
+                    player.getHand().clear();
+                    player.getHand().addAll(Deck.drawCards());
                 }
             }
         }
     }
+
+
+
 
 
     public Colour checkWin() {
