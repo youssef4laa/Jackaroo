@@ -329,20 +329,16 @@ public class Board implements BoardManager {
 
 	private void validateSaving(int positionInSafeZone, int positionOnTrack)
 	        throws InvalidMarbleException {
-	    Marble marble;
-	    try {
-	        marble = track.get(positionOnTrack).getMarble();
-	    } catch (IndexOutOfBoundsException e) {
+	    if (positionInSafeZone != -1) {
+	        throw new InvalidMarbleException("Selected marble is already in the Safe Zone");
+	    }
+	    if (positionOnTrack == -1) {
 	        throw new InvalidMarbleException("Selected marble was not on the track");
 	    }
+	    
+	    Marble marble = track.get(positionOnTrack).getMarble();
 	    if (marble == null) {
 	        throw new InvalidMarbleException("Selected marble was not on the track");
-	    }
-
-	    for (Cell c : getSafeZone(marble.getColour())) {
-	        if (c.getMarble() == marble) {
-	            throw new InvalidMarbleException("Selected marble is already in the Safe Zone");
-	        }
 	    }
 	}
 
@@ -412,25 +408,31 @@ public class Board implements BoardManager {
 		gameManager.sendHome(marble);
 	}
 
-	public void sendToBase(Marble marble) throws CannotFieldException, IllegalDestroyException {
-		if (marble == null) {
-			throw new CannotFieldException("Cannot field null marble");
-		}
+	public void sendToBase(Marble marble) throws CannotFieldException {
+	    if (marble == null) {
+	        throw new CannotFieldException("Cannot field null marble");
+	    }
 
-		int basePosition = getBasePosition(marble.getColour());
-		if (basePosition == -1) {
-			throw new CannotFieldException("Invalid marble color");
-		}
+	    int basePosition = getBasePosition(marble.getColour());
+	    if (basePosition == -1) {
+	        throw new CannotFieldException("Invalid marble color");
+	    }
 
-		Cell baseCell = track.get(basePosition);
+	    Cell baseCell = track.get(basePosition);
 
-		if (baseCell.getMarble() != null) {
-			validateFielding(baseCell);
-			destroyMarble(baseCell.getMarble());
-		}
+	    if (baseCell.getMarble() != null) {
+	        validateFielding(baseCell);
 
-		baseCell.setMarble(marble);
+	        // NEW: Send opponent marble home instead of destroying it
+	        Marble opponentMarble = baseCell.getMarble();
+	        if (!opponentMarble.getColour().equals(marble.getColour())) {
+	            gameManager.sendHome(opponentMarble);
+	        }
+	    }
+
+	    baseCell.setMarble(marble);
 	}
+
 
 	public void sendToSafe(Marble marble) throws InvalidMarbleException {
 		if (marble == null) {
@@ -468,7 +470,16 @@ public class Board implements BoardManager {
 		int randomIndex = (int) (Math.random() * unoccupiedPositions.size());
 		int targetPosition = unoccupiedPositions.get(randomIndex);
 
-		validateSaving(targetPosition, positionOnTrack);
+		// Check if marble is already in a safe zone
+		int positionInSafeZone = -1;
+		for (SafeZone safeZone : safeZones) {
+			positionInSafeZone = getPositionInPath(safeZone.getCells(), marble);
+			if (positionInSafeZone != -1) {
+				break;
+			}
+		}
+
+		validateSaving(positionInSafeZone, positionOnTrack);
 
 		track.get(positionOnTrack).setMarble(null);
 		targetSafeZone.get(targetPosition).setMarble(marble);
