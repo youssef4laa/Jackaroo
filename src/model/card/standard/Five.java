@@ -15,12 +15,13 @@ public class Five extends Standard {
         super(name, description, 5, suit, boardManager, gameManager);
     }
 
+
     @Override
     public boolean validateMarbleColours(ArrayList<Marble> marbles) {
         return validateMarbleSize(marbles)
-            && marbles.get(0) != null;
+            && marbles.get(0) != null
+            && marbles.get(0).getColour() == gameManager.getActivePlayerColour();
     }
-
 
 
     @Override
