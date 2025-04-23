@@ -122,7 +122,7 @@ public class Game implements GameManager {
             if (turn == 4) {
                 turn = 0;
 
-                if (Deck.getPoolSize() < 16) {
+                if (Deck.getPoolSize() < players.size()*4) {
                     Deck.refillPool(firePit);
                     firePit.clear();
                 }
