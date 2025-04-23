@@ -83,9 +83,7 @@ public class Deck {
         return cards;
     }
     public static void refillPool(ArrayList<Card> cards) {
-        if (cards != null) {
             cardsPool.addAll(cards);
-        }
     }
 
     public static int getPoolSize() {

@@ -185,12 +185,17 @@ public class Board implements BoardManager {
 		return path;
 	}
 
-private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destroy)
-		throws IllegalMovementException {
-	if (marble == null || fullPath == null || fullPath.isEmpty()) {
-		throw new IllegalMovementException("Invalid marble or path");
-	}
+	private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destroy)
+	        throws IllegalMovementException {
+	    if (marble == null || fullPath == null || fullPath.isEmpty()) {
+	        throw new IllegalMovementException("Invalid marble or path");
+	    }
 
+	    for (Cell cell : fullPath) {
+	        if (cell.getMarble() != null && cell.getCellType() == CellType.SAFE) {
+	            throw new IllegalMovementException("Cannot move through or land on an occupied safe cell");
+	        }
+	    }
 	Colour currentPlayerColour = gameManager.getActivePlayerColour();
 	boolean isOpponentMarble = marble.getColour() != currentPlayerColour;
 	SafeZone currentSafeZone = getSafeZone(fullPath.get(0));
@@ -206,22 +211,12 @@ private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destr
 			if (!destroy && m.getColour() == currentPlayerColour) {
 				throw new IllegalMovementException("Path blocked by own marble");
 			}
-			// Keep the check for opponent marbles if needed by rules, or remove if handled elsewhere
-			// Example: if (m.getColour() != currentPlayerColour) { /* logic for opponent */ }
 		}
 	}
 
 	if (blockerCount >= 2) {
 		throw new IllegalMovementException("Path is blocked by two or more marbles");
 	}
-
-	// Removed redundant check for target cell, as validateMarbleInteraction handles it
-	// Cell targetCell = fullPath.get(fullPath.size() - 1);
-	// Marble targetMarble = targetCell.getMarble();
-	// if (!destroy && targetMarble != null && targetMarble.getColour() == currentPlayerColour) {
-	//     throw new IllegalMovementException("Target cell occupied by own marble");
-	// }
-
 
 	int entryPos = getEntryPosition(marble.getColour());
 	if (entryPos != -1) {
