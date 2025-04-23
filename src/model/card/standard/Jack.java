@@ -19,20 +19,27 @@ public class Jack extends Standard {
     }
     @Override
     public boolean validateMarbleColours(ArrayList<Marble> marbles) {
-        if (marbles == null || marbles.size() != 2) return false;
+        // If only one marble is selected (for the move action), colour doesn't matter.
+        if (marbles != null && marbles.size() == 1) {
+             // Ensure the single marble is not null
+            return marbles.get(0) != null;
+        }
+        
+        // Original logic for the swap action (requires exactly 2 marbles)
+        if (marbles == null || marbles.size() != 2) return false; 
         Colour me = gameManager.getActivePlayerColour();
         boolean own = false, opp = false;
         for (Marble m : marbles) {
             if (m == null) return false;
             if (m.getColour() == me) {
-                if (own) return false;
+                if (own) return false; // Cannot select two own marbles
                 own = true;
             } else {
-                if (opp) return false;
+                if (opp) return false; // Cannot select two opponent marbles
                 opp = true;
             }
         }
-        return own && opp;
+        return own && opp; // Must select one own and one opponent marble for swap
     }
 
     @Override
