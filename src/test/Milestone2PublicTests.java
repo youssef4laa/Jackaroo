@@ -7102,7 +7102,7 @@ public class Milestone2PublicTests {
 			Throwable thrownException = ((InvocationTargetException) e).getTargetException();
 			assertTrue("IllegalDestroyException should not be thrown in case that a marble is not safe in their Base Cell.",
 					!IllegalDestroyException.isInstance(thrownException));
-			fail(e.getClass()+" occurred while accessing method validateDestroy in class Board.");
+			fail(e.getCause()+" occurred while accessing method validateDestroy in class Board.");
 		} catch (NoSuchFieldException e) {
 
 			fail(e.getClass()+" occurred while accessing method validateDestroy in class Board.");
@@ -8386,7 +8386,7 @@ public class Milestone2PublicTests {
 	
 			}catch (NoSuchMethodException | SecurityException | ClassNotFoundException | 
 					InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException e) {
-				fail(e.getClass()+" occurred while accessing method act in class Card.");
+				fail(e.getCause()+" occurred while accessing method act in class Card.");
 			}
 	
 		}
@@ -8615,7 +8615,7 @@ public class Milestone2PublicTests {
 		}catch (NoSuchMethodException | SecurityException | ClassNotFoundException | 
 				InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException e) {
 
-			fail(e.getClass()+" occurred while accessing method play in class Player.");
+			fail(e.getCause()+" occurred while accessing method play in class Player.");
 		}
 
 	}

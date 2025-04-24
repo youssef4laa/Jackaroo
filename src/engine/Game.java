@@ -167,8 +167,19 @@ public class Game implements GameManager {
         return null;
     }
 
+    @Override
     public void sendHome(Marble marble) {
         if (marble == null) return;
+
+        // Remove the marble from the board's track if it's there
+        for (Cell cell : board.getTrack()) {
+            if (cell.getMarble() == marble) {
+                cell.setMarble(null);
+                break;
+            }
+        }
+
+        // Send the marble to its owner's Home Zone
         for (Player player : players) {
             if (player.getColour() == marble.getColour()) {
                 player.regainMarble(marble);
@@ -176,6 +187,8 @@ public class Game implements GameManager {
             }
         }
     }
+
+
 
     public void fieldMarble() throws CannotFieldException, IllegalDestroyException {
         Player currentPlayer = players.get(currentPlayerIndex);

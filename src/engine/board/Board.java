@@ -299,15 +299,30 @@ public class Board implements BoardManager {
             throw new IllegalDestroyException("Invalid index");
 
         Cell cell = track.get(pos);
+        Marble marble = cell.getMarble();
+        if(marble == null)
+        	return;
 
-        if (cell.getCellType() == CellType.BASE) {
-            Marble occupying = cell.getMarble();
+        if (cell.getCellType() == CellType.BASE && pos == getBasePosition(marble.getColour())) 
+        	throw new IllegalDestroyException("You cannot destroy a marble in its own Base Cell.");
+        
+        if(cell.getCellType() == CellType.SAFE && isMarbleSafe(marble,pos))
+        	throw new IllegalDestroyException("You cannot destroy a marble in its own Safe Zone");
+  
+           }
+        
+	private boolean isMarbleSafe(Marble marble, int pos) {
+	    if (marble == null) return false;
 
-            if (occupying != null && !occupying.getColour().equals(gameManager.getActivePlayerColour())) {
-                throw new IllegalDestroyException("Cannot destroy marble in opponent's base");
-            }
-        }
-    }
+	    Colour marbleColour = marble.getColour();
+	    ArrayList<Cell> safeZone = getSafeZone(marbleColour);
+	    for(Cell safeCell : safeZone) {
+	    	if(track.get(pos)==safeCell)
+	    		return true;
+	    }
+	    return false;
+	}
+
 
 
 
