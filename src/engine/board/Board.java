@@ -185,51 +185,59 @@ public class Board implements BoardManager {
 		return path;
 	}
 
-	private void validatePath(Marble marble, ArrayList<Cell> fullPath, boolean destroy)
-	        throws IllegalMovementException {
+private void validatePath(Marble movingMarble, ArrayList<Cell> path, boolean isKingCard)
+        throws IllegalMovementException {
 
-	    int otherMarblesC = 0;
-	    Colour activeColour = gameManager.getActivePlayerColour();
+    Colour playerColour = gameManager.getActivePlayerColour();
+    int obstacleCount = 0;
+    Cell destinationCell = path.get(path.size() - 1);
+    boolean isMovingToSafeZone = destinationCell.getCellType() == CellType.SAFE;
 
-	    for (int i = 1; i < fullPath.size(); i++) {
-	        Cell cell = fullPath.get(i);
-	        Marble occupying = cell.getMarble();
+    for (int i = 1; i < path.size(); i++) {
+        Cell currentCell = path.get(i);
+        Marble foundMarble = currentCell.getMarble();
+        boolean isLastStep = (i == path.size() - 1);
 
-	        if (occupying != null) {
-	            otherMarblesC++;
+        if (foundMarble == null) continue;
+        obstacleCount++;
 
-	            // Self blockage check
-	            if (!destroy && occupying.getColour() == activeColour) {
-	                throw new IllegalMovementException("Illegal Movement! "
-	                        + "You cannot move a marble while another marble of the same colour is in the way or at the target position");
-	            }
+        boolean isFriendly = foundMarble.getColour() == playerColour;
+        boolean isAtBaseCell = getPositionInPath(track, foundMarble) == getBasePosition(foundMarble.getColour());
 
-	            // More than one marble in the way (except at final destination)
-	            if (otherMarblesC > 1 && i != fullPath.size() - 1 && !destroy) {
-	                throw new IllegalMovementException("Illegal Movement! "
-	                        + "You cannot move a marble while more than 1 marble is in the way!");
-	            }
+        if (!isKingCard) {
+            if (isFriendly) {
+                throw new IllegalMovementException(
+                    "Invalid move: Cannot pass or land on your own marble."
+                );
+            }
 
-	            // Entry blockage (trying to enter Safe zone while ENTRY cell is occupied)
-	            if (!destroy 
-	                    && fullPath.get(fullPath.size() - 1).getCellType() == CellType.SAFE 
-	                    && cell.getCellType() == CellType.ENTRY) {
-	                throw new IllegalMovementException("entry Blockage");
-	            }
+            if (obstacleCount > 1 && !isLastStep) {
+                throw new IllegalMovementException(
+                    "Invalid move: Path contains more than one marble."
+                );
+            }
 
-	            // Base cell blockage
-	            int baseIndex = getBasePosition(occupying.getColour());
-	            if (getPositionInPath(track, occupying) == baseIndex) {
-	                throw new IllegalMovementException("Illegal Movement! You defied the Base Cell Blockage Rule!");
-	            }
+            if (isMovingToSafeZone && currentCell.getCellType() == CellType.ENTRY) {
+                throw new IllegalMovementException(
+                    "Invalid move: Entry to Safe Zone is blocked."
+                );
+            }
+        }
 
-	            // King (destroying move) cannot interact with Safe Zone marbles
-	            if (destroy && cell.getCellType() == CellType.SAFE) {
-	                throw new IllegalMovementException("Illegal Movement! A King cannot bypass or land on a Safe Zone marble");
-	            }
-	        }
-	    }
-	}
+        if (isAtBaseCell) {
+            throw new IllegalMovementException(
+                "Invalid move: Movement blocked by marble in Base Cell."
+            );
+        }
+
+        if (isKingCard && currentCell.getCellType() == CellType.SAFE) {
+            throw new IllegalMovementException(
+                "Invalid move: King cannot bypass or land on a Safe Zone marble."
+            );
+        }
+    }
+}
+
 
 
 
