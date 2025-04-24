@@ -16,12 +16,6 @@ public class Two extends Standard {
     public boolean validateMarbleSize(ArrayList<Marble> marbles) {
         return marbles != null && marbles.size() == 1;
     }
-    @Override
-    public boolean validateMarbleColours(ArrayList<Marble> marbles) {
-        return validateMarbleSize(marbles)
-            && marbles.get(0) != null
-            && marbles.get(0).getColour() == gameManager.getActivePlayerColour();
-    }
     
     public void act(ArrayList<Marble> marbles)
             throws ActionException, InvalidMarbleException {

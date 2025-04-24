@@ -99,17 +99,7 @@ public class Player {
             throw new InvalidCardException("No card has been selected.");
         }
 
-        if (selectedMarbles.isEmpty()) {
-            throw new InvalidMarbleException("No marbles have been selected.");
-        }
-
         ArrayList<Marble> marblesToActOn = new ArrayList<>(selectedMarbles);
-
-        for (Marble marble : marblesToActOn) {
-            if (marble == null) {
-                throw new InvalidMarbleException("One or more selected marbles are undefined.");
-            }
-        }
 
         if (!selectedCard.validateMarbleSize(marblesToActOn)) {
             throw new InvalidMarbleException("Invalid number of selected marbles for this card.");
