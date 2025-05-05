@@ -1,10 +1,12 @@
 package model.card.standard;
 
+import java.util.ArrayList;
+
 import engine.GameManager;
 import engine.board.BoardManager;
+import exception.ActionException;
+import exception.InvalidMarbleException;
 import model.player.Marble;
-import java.util.ArrayList;
-import exception.*;
 
 
 public class Ace extends Standard {
@@ -15,23 +17,16 @@ public class Ace extends Standard {
 
     @Override
     public boolean validateMarbleSize(ArrayList<Marble> marbles) {
-        int s = marbles == null ? 0 : marbles.size();
-        return s == 0 || s == 1;
+        return marbles.isEmpty() || super.validateMarbleSize(marbles);
+    }
+
+    @Override
+    public void act(ArrayList<Marble> marbles) throws ActionException, InvalidMarbleException {
+        if (marbles.isEmpty()) 
+            this.gameManager.fieldMarble();
+        
+        else
+            super.act(marbles);
     }
     
-    public void act(ArrayList<Marble> marbles)
-            throws ActionException, InvalidMarbleException {
-
-        if (marbles == null || marbles.isEmpty()) {
-            gameManager.fieldMarble();
-            return;
-        }
-
-        Marble m = marbles.get(0);
-        boardManager.moveBy(m, 1, false);
-    }
-
-
-
-
 }

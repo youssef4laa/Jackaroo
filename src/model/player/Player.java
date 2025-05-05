@@ -6,7 +6,6 @@ import exception.GameException;
 import exception.InvalidCardException;
 import exception.InvalidMarbleException;
 import model.Colour;
-import exception.ActionException;
 import model.card.Card;
 
 @SuppressWarnings("unused")
@@ -55,76 +54,51 @@ public class Player {
     
     public Card getSelectedCard() {
         return selectedCard;
-   }
-      
-    public void regainMarble(Marble marble) {
-        if (marble != null && marble.getColour() == this.colour && !marbles.contains(marble)) {
-            marbles.add(marble);
-        }
     }
     
+    public void regainMarble(Marble marble) {
+        this.marbles.add(marble);
+    }
+
     public Marble getOneMarble() {
-        if (!marbles.isEmpty()) {
-            return marbles.get(0);
-        }
-        return null;
+        if(marbles.isEmpty())
+            return null;
+
+        return this.marbles.get(0);
     }
 
     public void selectCard(Card card) throws InvalidCardException {
-        if (card == null || !hand.contains(card)) {
-            throw new InvalidCardException("Selected card is not in player's hand");
-        }
+        if (!this.hand.contains(card)) 
+            throw new InvalidCardException("Card not in hand.");
+        
         this.selectedCard = card;
     }
 
     public void selectMarble(Marble marble) throws InvalidMarbleException {
-        // if they've already selected this exact marble, do nothing
-        if (selectedMarbles.contains(marble)) {
-            return;
+        if (!this.selectedMarbles.contains(marble)) {
+            if(this.selectedMarbles.size() > 1)
+                throw new InvalidMarbleException("Cannot select more than 2 marbles.");
+            
+            selectedMarbles.add(marble);
         }
-        // only allow up to 2 distinct marbles
-        if (selectedMarbles.size() >= 2) {
-            throw new InvalidMarbleException("Cannot select more than two marbles");
-        }
-        // (any other validation you already have here)
-        selectedMarbles.add(marble);
     }
-	
+
     public void deselectAll() {
-        selectedCard = null;
-        selectedMarbles.clear();
+        this.selectedCard = null;
+        this.selectedMarbles.clear();
     }
+
     public void play() throws GameException {
-        if (selectedCard == null) {
-            throw new InvalidCardException("No card has been selected.");
-        }
-
-        if (selectedMarbles.isEmpty()) {
-            throw new InvalidMarbleException("No marbles have been selected.");
-        }
-
-        ArrayList<Marble> marblesToActOn = new ArrayList<>(selectedMarbles);
-
-        for (Marble marble : marblesToActOn) {
-            if (marble == null) {
-                throw new InvalidMarbleException("One or more selected marbles are undefined.");
-            }
-        }
-
-        if (!selectedCard.validateMarbleSize(marblesToActOn)) {
-            throw new InvalidMarbleException("Invalid number of selected marbles for this card.");
-        }
-
-        if (!selectedCard.validateMarbleColours(marblesToActOn)) {
-            throw new InvalidMarbleException("Invalid marble colours for the selected card.");
-        }
-
-        selectedCard.act(marblesToActOn);
+        if(selectedCard == null)
+            throw new InvalidCardException("Must select a card to play.");
+        
+        if(!this.selectedCard.validateMarbleSize(this.selectedMarbles))
+            throw new InvalidMarbleException("Invalid number of marbles selected for " + selectedCard.getName() + ".");
+        
+        if(!this.selectedCard.validateMarbleColours(this.selectedMarbles))
+            throw new InvalidMarbleException("Invalid marble colours selected for " + selectedCard.getName() + ".");
+        
+        this.selectedCard.act(this.selectedMarbles);
     }
-
-
-
-    
-    
 
 }
