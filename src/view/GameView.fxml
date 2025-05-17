@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.GameViewController">
+
+    <!-- Top: current / next player indicators -->
+    <top>
+        <HBox spacing="20" style="-fx-padding: 10">
+            <Label fx:id="currentPlayerLabel" text="Current: Player 1"/>
+            <Label fx:id="nextPlayerLabel"    text="Next: Player 2"/>
+        </HBox>
+    </top>
+
+    <!-- Left: Home Zone and Safe Zone for the human player -->
+    <left>
+        <VBox spacing="15" style="-fx-padding: 10">
+            <Label text="Home Zone"/>
+            <ListView fx:id="homeZoneList" prefWidth="100" prefHeight="150"/>
+
+            <Label text="Safe Zone"/>
+            <GridPane fx:id="safeZoneGrid" hgap="5" vgap="5">
+                <!-- 4×1 or 1×4 grid cells for safe slots -->
+            </GridPane>
+        </VBox>
+    </left>
+
+    <!-- Center: Main board -->
+    <center>
+        <GridPane fx:id="boardGrid"
+                  hgap="2" vgap="2"
+                  style="-fx-padding: 10"
+                  GridPane.rowSpan="10" GridPane.columnSpan="10">
+            <!-- 10×10 cells representing the track; add ImageViews for marbles -->
+        </GridPane>
+    </center>
+
+    <!-- Right: Deck and Firepit -->
+    <right>
+        <VBox spacing="15" style="-fx-padding: 10">
+            <Label text="Deck"/>
+            <Button fx:id="drawButton" text="Draw Card"/>
+            <Label fx:id="deckCountLabel" text="Cards left: 0"/>
+
+            <Label text="Firepit"/>
+            <ListView fx:id="firepitList" prefWidth="120" prefHeight="200"/>
+        </VBox>
+    </right>
+
+    <!-- Bottom: Player’s hand, split‐distance input, and messages -->
+    <bottom>
+        <VBox spacing="10" style="-fx-padding: 10">
+            <HBox fx:id="handBox" spacing="10">
+                <ImageView fx:id="cardSlot1" fitWidth="80" fitHeight="120" preserveRatio="true"/>
+                <ImageView fx:id="cardSlot2" fitWidth="80" fitHeight="120" preserveRatio="true"/>
+                <ImageView fx:id="cardSlot3" fitWidth="80" fitHeight="120" preserveRatio="true"/>
+                <ImageView fx:id="cardSlot4" fitWidth="80" fitHeight="120" preserveRatio="true"/>
+            </HBox>
+
+            <!-- Only shown when Seven is played -->
+            <HBox spacing="5" visible="false" fx:id="splitBox">
+                <Label text="Split Distance:"/>
+                <TextField fx:id="splitDistanceField" promptText="1–6" maxWidth="50"/>
+            </HBox>
+
+            <Label fx:id="messageLabel" textFill="red" wrapText="true"/>
+        </VBox>
+    </bottom>
+
+</BorderPane>
