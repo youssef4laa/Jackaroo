@@ -8,19 +8,22 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 public class Main extends Application {
     private static final int ROWS = 10;
@@ -29,7 +32,6 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // First show the start menu. When done, build the game UI.
         StartMenu startMenu = new StartMenu(primaryStage);
         startMenu.show(playerName -> {
             try {
@@ -40,22 +42,27 @@ public class Main extends Application {
         });
     }
 
-    /**
-     * Constructs the main game UI—board, side panels, etc.—and shows it on stage.
-     */
     private void buildGameUI(Stage stage, String playerName) throws IOException {
-        // initialize game engine
         new Game(playerName);
 
-        // load player icons
         Image[] icons = new Image[] {
             new Image(getClass().getResourceAsStream("/images/player_red.png")),
             new Image(getClass().getResourceAsStream("/images/player_green.png")),
             new Image(getClass().getResourceAsStream("/images/player_blue.png")),
             new Image(getClass().getResourceAsStream("/images/player_yellow.png"))
         };
- 
-        // build board grid
+        String[] names  = { "Mr. Red", "Mr. Green", "Mr. Blue", "Mr. Yellow" };
+        String[] colors = { "red",      "green",      "blue",      "goldenrod"   };
+        List<Integer> order = Arrays.asList(0, 1, 2, 3);
+        Collections.shuffle(order);
+        Random rnd = new Random();
+        int playerCharIndex = rnd.nextInt(icons.length);
+        names[playerCharIndex] = playerName;
+        int leftIdx   = order.get(0);
+        int topIdx    = order.get(1);
+        int rightIdx  = order.get(2);
+        int bottomIdx = order.get(3);
+
         GridPane boardGrid = new GridPane();
         boardGrid.setHgap(2);
         boardGrid.setVgap(2);
@@ -70,57 +77,69 @@ public class Main extends Application {
             }
         }
 
-        // root layout
         BorderPane root = new BorderPane();
         root.setCenter(boardGrid);
-        root.setLeft(createSidePanel(icons[0], false));   // red
-        root.setTop(createSidePanel(icons[1], true));     // green
-        root.setRight(createSidePanel(icons[2], false));  // blue
-        root.setBottom(createSidePanel(icons[3], true));  // yellow
+        root.setLeft(  createSidePanel(icons[leftIdx],   false, names[leftIdx],  colors[leftIdx]));
+        root.setTop(   createSidePanel(icons[topIdx],    true,  names[topIdx],   colors[topIdx]));
+        root.setRight( createSidePanel(icons[rightIdx],  false, names[rightIdx], colors[rightIdx]));
+        root.setBottom(createSidePanel(icons[bottomIdx], true,  names[bottomIdx], colors[bottomIdx]));
+
         root.setStyle(
-        	    "-fx-background-image: url(\"/images/tile.png\");" +
-        	    "-fx-background-repeat: repeat repeat;" +
-        	    "-fx-background-position: center center;"
-        	);
+            "-fx-background-image: url(\"/images/tile.png\");" +
+            "-fx-background-repeat: repeat repeat;" +
+            "-fx-background-position: center center;"
+        );
 
-                // auto-size the window to exactly fit the top panel + grid + bottom panel
-               Scene scene = new Scene(root);
-                stage.setScene(scene);
-               stage.sizeToScene();              // shrink-wrap to content
-               stage.setTitle("Jackaroo — Welcome, " + playerName);
-              stage.setResizable(false);
-               stage.show();
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.sizeToScene();
+        stage.setTitle("Jackaroo — Welcome, " + playerName);
+        stage.setResizable(false);
+        stage.show();
     }
-private Pane createSidePanel(Image icon, boolean horizontal) {
-    // 1) use a Region or Pane with a fixed pref, min and max size
-    double w = 4 * CELL_SIZE, h = CELL_SIZE;
-    Region placeholder = new Region();  
-    placeholder.setPrefSize(w, h);
-    placeholder.setMinSize(w, h);
-    placeholder.setMaxSize(w, h);
-    placeholder.setStyle("-fx-border-color: gray; -fx-border-style: dashed;");
 
-    ImageView iv = new ImageView(icon);
-    iv.setFitWidth(CELL_SIZE*2);
-    iv.setFitHeight(CELL_SIZE*2);
-    iv.setPreserveRatio(true);
+    /**
+     * Creates a side panel containing the player's icon, colored name below at double size, and a placeholder.
+     * @param icon      The player icon
+     * @param horizontal Whether panel is horizontal (top/bottom) or vertical (left/right)
+     * @param name      The display name, e.g. "Mr. Red"
+     * @param color     The CSS color for the name text
+     */
+    private Pane createSidePanel(Image icon, boolean horizontal, String name, String color) {
+        double w = 4 * CELL_SIZE, h = CELL_SIZE;
+        Region placeholder = new Region();
+        placeholder.setPrefSize(w, h);
+        placeholder.setMinSize(w, h);
+        placeholder.setMaxSize(w, h);
+        placeholder.setStyle("-fx-border-color: gray; -fx-border-style: dashed;");
 
-    if (horizontal) {
-        HBox box = new HBox(10, iv, placeholder);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(10));
-        // 2) turn off horizontal grow on the placeholder
-        HBox.setHgrow(placeholder, Priority.NEVER);
-        return box;
-    } else {
-        VBox box = new VBox(10, iv, placeholder);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(10));
-        // if you ever see vertical stretching you can similarly:
-        // VBox.setVgrow(placeholder, Priority.NEVER);
-        return box;
+        ImageView iv = new ImageView(icon);
+        iv.setFitWidth(CELL_SIZE * 2);
+        iv.setFitHeight(CELL_SIZE * 2);
+        iv.setPreserveRatio(true);
+
+        Label nameLabel = new Label(name);
+        nameLabel.setWrapText(true);
+        nameLabel.setMaxWidth(CELL_SIZE * 2);
+        nameLabel.setAlignment(Pos.CENTER);
+        nameLabel.setStyle("-fx-font-size: 2em; -fx-text-fill: " + color + ";");
+
+        if (horizontal) {
+            VBox iconBox = new VBox(5, iv, nameLabel);
+            iconBox.setAlignment(Pos.CENTER);
+            HBox box = new HBox(10, iconBox, placeholder);
+            box.setAlignment(Pos.CENTER);
+            box.setPadding(new Insets(10));
+            HBox.setHgrow(placeholder, Priority.NEVER);
+            return box;
+        } else {
+            VBox box = new VBox(5, iv, nameLabel, placeholder);
+            box.setAlignment(Pos.CENTER);
+            box.setPadding(new Insets(10));
+            return box;
+        }
     }
-}
+
     private void showErrorAndExit(String msg) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle("Initialization Error");
