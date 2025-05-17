@@ -16,14 +16,16 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import java.io.IOException;
 
 public class Main extends Application {
     private static final int ROWS = 10;
     private static final int COLS = 10;
     private static final double CELL_SIZE = 60;
-    private static final double MARGIN = 200;
 
     @Override
     public void start(Stage primaryStage) {
@@ -52,13 +54,12 @@ public class Main extends Application {
             new Image(getClass().getResourceAsStream("/images/player_blue.png")),
             new Image(getClass().getResourceAsStream("/images/player_yellow.png"))
         };
-
+ 
         // build board grid
         GridPane boardGrid = new GridPane();
         boardGrid.setHgap(2);
         boardGrid.setVgap(2);
         boardGrid.setPadding(new Insets(10));
-        boardGrid.setStyle("-fx-background-color: lightgray;");
         boardGrid.setPrefSize(COLS * CELL_SIZE, ROWS * CELL_SIZE);
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
@@ -76,37 +77,50 @@ public class Main extends Application {
         root.setTop(createSidePanel(icons[1], true));     // green
         root.setRight(createSidePanel(icons[2], false));  // blue
         root.setBottom(createSidePanel(icons[3], true));  // yellow
+        root.setStyle(
+        	    "-fx-background-image: url(\"/images/tile.png\");" +
+        	    "-fx-background-repeat: repeat repeat;" +
+        	    "-fx-background-position: center center;"
+        	);
 
-        Scene scene = new Scene(root, COLS * CELL_SIZE + MARGIN, COLS * CELL_SIZE + MARGIN);
-        stage.setScene(scene);
-        stage.setTitle("Jackaroo — Welcome, " + playerName);
-        stage.setResizable(true);
-        stage.show();
+                // auto-size the window to exactly fit the top panel + grid + bottom panel
+               Scene scene = new Scene(root);
+                stage.setScene(scene);
+               stage.sizeToScene();              // shrink-wrap to content
+               stage.setTitle("Jackaroo — Welcome, " + playerName);
+              stage.setResizable(false);
+               stage.show();
     }
+private Pane createSidePanel(Image icon, boolean horizontal) {
+    // 1) use a Region or Pane with a fixed pref, min and max size
+    double w = 4 * CELL_SIZE, h = CELL_SIZE;
+    Region placeholder = new Region();  
+    placeholder.setPrefSize(w, h);
+    placeholder.setMinSize(w, h);
+    placeholder.setMaxSize(w, h);
+    placeholder.setStyle("-fx-border-color: gray; -fx-border-style: dashed;");
 
-    private Pane createSidePanel(Image icon, boolean horizontal) {
-        Pane placeholder = new Pane();
-        placeholder.setPrefSize(4 * CELL_SIZE, CELL_SIZE);
-        placeholder.setStyle("-fx-border-color: gray; -fx-border-style: dashed;");
+    ImageView iv = new ImageView(icon);
+    iv.setFitWidth(CELL_SIZE*2);
+    iv.setFitHeight(CELL_SIZE*2);
+    iv.setPreserveRatio(true);
 
-        ImageView iv = new ImageView(icon);
-        iv.setFitWidth(CELL_SIZE);
-        iv.setFitHeight(CELL_SIZE);
-        iv.setPreserveRatio(true);
-
-        if (horizontal) {
-            HBox box = new HBox(10, iv, placeholder);
-            box.setAlignment(Pos.CENTER);
-            box.setPadding(new Insets(10));
-            return box;
-        } else {
-            VBox box = new VBox(10, iv, placeholder);
-            box.setAlignment(Pos.CENTER);
-            box.setPadding(new Insets(10));
-            return box;
-        }
+    if (horizontal) {
+        HBox box = new HBox(10, iv, placeholder);
+        box.setAlignment(Pos.CENTER);
+        box.setPadding(new Insets(10));
+        // 2) turn off horizontal grow on the placeholder
+        HBox.setHgrow(placeholder, Priority.NEVER);
+        return box;
+    } else {
+        VBox box = new VBox(10, iv, placeholder);
+        box.setAlignment(Pos.CENTER);
+        box.setPadding(new Insets(10));
+        // if you ever see vertical stretching you can similarly:
+        // VBox.setVgrow(placeholder, Priority.NEVER);
+        return box;
     }
-
+}
     private void showErrorAndExit(String msg) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle("Initialization Error");
