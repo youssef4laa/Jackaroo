@@ -1,72 +1,113 @@
+/*  ────────────────────────────────────────────────────────────────────────────
+ *  CardView.java  (package view)
+ *  JavaFX-8-compatible version
+ *  ──────────────────────────────────────────────────────────────────────────── */
 package view;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import model.card.Card;
 import model.card.standard.Standard;
-import model.card.wild.Wild;
 
-/**
- * A JavaFX component that shows a single card face.
- */
 public class CardView extends StackPane {
 
-    private Card card;
-    private final ImageView imageView;
+    /* ── public read-only property so the controller can bind if desired ── */
+    private final ObjectProperty<Card> cardProperty = new SimpleObjectProperty<>();
 
-    /**
-     * Constructs a CardView for the given card.
-     * Assumes you have PNGs under /images/cards/ named like "7_club.png", "ace_spade.png", "burner.png", etc.
-     */
+    private final Rectangle frame       = new Rectangle(100, 140); // constant size
+    private final VBox      faceContainer = new VBox(2);          // rank / suit / name
+    private final ImageView suitIcon      = new ImageView();
+    private       boolean   faceUp        = true;
+
     public CardView(Card card) {
-        this.card = card;
-        this.imageView = new ImageView(loadCardImage(card));
-        imageView.setFitWidth(60);
-        imageView.setFitHeight(90);
-
-        getChildren().add(imageView);
+        setPrefSize(frame.getWidth(), frame.getHeight());
         setAlignment(Pos.CENTER);
-        getStyleClass().add("card-view"); // for CSS borders, hover effects, etc.
+
+        frame.setArcWidth(12);
+        frame.setArcHeight(12);
+        frame.setStroke(Color.DARKGRAY);
+        frame.setStrokeWidth(1.1);
+
+        faceContainer.setAlignment(Pos.CENTER);
+
+        getChildren().addAll(frame, faceContainer);               // order matters
+        setCard(card);
+
+        /* simple hover cue so users know the card is clickable */
+        addEventHandler(MouseEvent.MOUSE_ENTERED,
+                e -> setCursor(Cursor.HAND));
+        addEventHandler(MouseEvent.MOUSE_EXITED,
+                e -> setCursor(Cursor.DEFAULT));
     }
 
-    /**
-     * Updates this view to show a different card.
-     */
+    /** Changes which card is rendered and refreshes the graphic. */
     public void setCard(Card card) {
-        this.card = card;
-        imageView.setImage(loadCardImage(card));
+        cardProperty.set(card);
+        refresh();
     }
 
-    public Card getCard() {
-        return card;
+    public ReadOnlyObjectProperty<Card> cardProperty() {
+        return cardProperty;
     }
 
-    /**
-     * Chooses the correct image resource for the card.
-     */
-    private Image loadCardImage(Card card) {
-        String filename;
+    /** Flips the card visually (face-up ⇄ face-down). */
+    public void setFaceUp(boolean faceUp) {
+        if (this.faceUp != faceUp) {
+            this.faceUp = faceUp;
+            refresh();
+        }
+    }
 
-        if (card instanceof Standard) {
-            Standard s = (Standard) card;
-            // e.g. "/images/cards/7_club.png"
-            filename = String.format(
-                "/images/cards/%d_%s.png",
-                s.getRank(),
-                s.getSuit().name().toLowerCase()
-            );
-        } else if (card instanceof Wild) {
-            // e.g. "/images/cards/burner.png" or "saver.png"
-            filename = "/images/cards/" +
-                       card.getClass().getSimpleName().toLowerCase() +
-                       ".png";
-        } else {
-            // fallback to back-of-card
-            filename = "/images/cards/card_back.png";
+    public boolean isFaceUp() {
+        return faceUp;
+    }
+
+    /* ── private helpers ──────────────────────────────────────────────── */
+    private void refresh() {
+        Card c = cardProperty.get();
+        faceContainer.getChildren().clear();
+
+        if (c == null || !faceUp) {
+            frame.setFill(Color.DARKRED);          // back of the card
+            suitIcon.setImage(null);
+            return;
         }
 
-        return new Image(getClass().getResourceAsStream(filename));
+        frame.setFill(Color.WHITE);
+
+        Text rankText = new Text();
+        Text nameText = new Text(c.getName());
+        /* “Montserrat” may not exist on every PC; JavaFX will silently fall back */
+        nameText.setFont(Font.font("Montserrat", FontWeight.SEMI_BOLD, 10));
+
+        /* If the engine card is a Standard card we can show rank & suit */
+        if (c instanceof Standard) {               // Java 8-style instanceof
+            Standard std = (Standard) c;           // explicit cast required
+            rankText.setText(String.valueOf(std.getRank()));
+            rankText.setFont(Font.font("Montserrat", FontWeight.BOLD, 14));
+
+            /* Lookup an image according to suit, e.g. “/icons/heart.png” –
+               adjust the path to match your resource layout. */
+            String iconPath = "/icons/" + std.getSuit().name().toLowerCase() + ".png";
+            suitIcon.setImage(new Image(iconPath, 18, 18, true, true));
+        } else {
+            rankText.setText("");                  // wild cards don’t need a rank here
+            suitIcon.setImage(null);
+        }
+
+        faceContainer.getChildren().addAll(rankText, suitIcon, nameText);
     }
 }
