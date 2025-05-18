@@ -37,188 +37,239 @@ public class BoardView {
     private static final int COLS = 10;
     private static final double CELL_SIZE = 60;
 
-    public static BorderPane create(String playerName) throws IOException {
-        Game game = new Game(playerName);
-        board = game.getBoard();
 
-        Image[] icons = new Image[] {
-            new Image(BoardView.class.getResourceAsStream("/images/player_red.png")),
-            new Image(BoardView.class.getResourceAsStream("/images/player_green.png")),
-            new Image(BoardView.class.getResourceAsStream("/images/player_blue.png")),
-            new Image(BoardView.class.getResourceAsStream("/images/player_yellow.png"))
-        };
-        String[] names  = { "Mr. Red", "Mr. Green", "Mr. Blue", "Mr. Yellow" };
-        String[] colors = { "red", "green", "blue", "goldenrod" };
+public static BorderPane create(String playerName) throws IOException {
+    Game game = new Game(playerName);
+    board = game.getBoard();
 
-        // randomize panel positions
-        List<Integer> order = Arrays.asList(0,1,2,3);
-        Collections.shuffle(order);
-        Random rnd = new Random();
-        int humanIdx = rnd.nextInt(4);
-        names[humanIdx] = playerName;
+    Image[] icons = new Image[] {
+        new Image(BoardView.class.getResourceAsStream("/images/player_red.png")),
+        new Image(BoardView.class.getResourceAsStream("/images/player_green.png")),
+        new Image(BoardView.class.getResourceAsStream("/images/player_blue.png")),
+        new Image(BoardView.class.getResourceAsStream("/images/player_yellow.png"))
+    };
+    String[] names  = { "Mr. Red", "Mr. Green", "Mr. Blue", "Mr. Yellow" };
+    String[] colors = { "red", "green", "blue", "goldenrod" };
 
-        int leftIdx   = order.get(0);
-        int topIdx    = order.get(1);
-        int rightIdx  = order.get(2);
-        int bottomIdx = order.get(3);
+    // randomize panel positions
+    List<Integer> order = Arrays.asList(0,1,2,3);
+    Collections.shuffle(order);
+    Random rnd = new Random();
+    int humanIdx = rnd.nextInt(4);
+    names[humanIdx] = playerName;
 
-        // Assign colors to their respective positions
-        // Create a map to link color ordinals to their index in the panel order
-        Map<Integer, Integer> colorToPositionMap = new HashMap<>();
-        colorToPositionMap.put(leftIdx, 2);   // LEFT = 2
-        colorToPositionMap.put(topIdx, 3);    // TOP = 3 (was incorrectly 1)
-        colorToPositionMap.put(rightIdx, 0);  // RIGHT = 0
-        colorToPositionMap.put(bottomIdx, 1); // BOTTOM = 1 (was incorrectly 3)
+    int leftIdx   = order.get(0);
+    int topIdx    = order.get(1);
+    int rightIdx  = order.get(2);
+    int bottomIdx = order.get(3);
 
-        final double WINDOW_SIZE  = 800;
-        final int    TRACK_CELLS  = board.getTrack().size();
-        final double RING_RADIUS  = 300;
-        final double TILE_RADIUS  = 12;
-        final double SAFE_SPACING = TILE_RADIUS * 2.2;
+    // Assign colors to their respective positions
+    // Create a map to link color ordinals to their index in the panel order
+    Map<Integer, Integer> colorToPositionMap = new HashMap<>();
+    colorToPositionMap.put(leftIdx, 2);   // LEFT = 2
+    colorToPositionMap.put(topIdx, 3);    // TOP = 3
+    colorToPositionMap.put(rightIdx, 0);  // RIGHT = 0
+    colorToPositionMap.put(bottomIdx, 1); // BOTTOM = 1
 
-        // --- Center pane with ring + safe + home ---
-        Pane center = new Pane();
-        center.setPrefSize(WINDOW_SIZE, WINDOW_SIZE);
-        double cx = WINDOW_SIZE/2, cy = WINDOW_SIZE/2;
+    final double WINDOW_SIZE  = 800; // Consider making this dynamic or using bindings if more advanced resizing is needed
+    final int    TRACK_CELLS  = board.getTrack().size();
+    final double RING_RADIUS  = 300;
+    final double TILE_RADIUS  = 12;
+    final double SAFE_SPACING = TILE_RADIUS * 2.2;
 
-        // 1) Draw track tiles
-        Point2D[] trackPts = new Point2D[TRACK_CELLS];
-        for (int i = 0; i < TRACK_CELLS; i++) {
-            double angle = 2 * Math.PI * i / TRACK_CELLS;
-            double x = cx + RING_RADIUS * Math.cos(angle);
-            double y = cy + RING_RADIUS * Math.sin(angle);
-            trackPts[i] = new Point2D(x, y);
+    // --- Center pane with ring + safe + home ---
+    Pane center = new Pane();
+    // Removed fixed size to allow BorderPane to manage it
+    // center.setPrefSize(WINDOW_SIZE, WINDOW_SIZE);
 
-            Circle tile = new Circle(x, y, TILE_RADIUS, Color.BEIGE);
-            tile.setStroke(Color.GRAY);
-            center.getChildren().add(tile);
+    // Adjust vertical position - shifting everything up
+    // The vertical shift and bottom padding are used to visually center the circle.
+    // Keep these for now, but they might need refinement for more flexible layouts.
+    double verticalShift = -80; // Negative value shifts up
+    double cx = WINDOW_SIZE/2;
+    double cy = WINDOW_SIZE/2 + verticalShift;
 
-            cellPositionMap.put(board.getTrack().get(i), new int[]{ (int)x, (int)y });
-        }
+    // 1) Draw track tiles
+    Point2D[] trackPts = new Point2D[TRACK_CELLS];
+    for (int i = 0; i < TRACK_CELLS; i++) {
+        double angle = 2 * Math.PI * i / TRACK_CELLS;
+        double x = cx + RING_RADIUS * Math.cos(angle);
+        double y = cy + RING_RADIUS * Math.sin(angle);
+        trackPts[i] = new Point2D(x, y);
 
-        // 2) Draw links between tiles
-        for (int i = 0; i < TRACK_CELLS; i++) {
-            Point2D p1 = trackPts[i];
-            Point2D p2 = trackPts[(i+1)%TRACK_CELLS];
-            Line link = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
-            link.setStroke(Color.DARKGRAY);
-            center.getChildren().add(link);
-        }
+        Circle tile = new Circle(x, y, TILE_RADIUS, Color.BEIGE);
+        tile.setStroke(Color.GRAY);
+        center.getChildren().add(tile);
 
-        // 3) Draw safe-zones in the right quadrant order
-        for (SafeZone zone : board.getSafeZones()) {
-            int colour = zone.getColour().ordinal();
-            
-            // Use the mapping to get the correct quadrant for this color
-            Integer positionIndex = colorToPositionMap.get(colour);
-            if (positionIndex == null) {
-                // Fallback just in case
-                positionIndex = colour;
-            }
-            
-            int idx = positionIndex * (TRACK_CELLS / 4);
-            Point2D base = trackPts[idx];
-
-            // direction inward toward center
-            Point2D dir = new Point2D(cx - base.getX(), cy - base.getY()).normalize();
-            Point2D prev = base;
-            String cssColor = colors[colour];
-
-            // base circle
-            Circle baseTile = new Circle(base.getX(), base.getY(), TILE_RADIUS);
-            baseTile.setStyle(String.format("-fx-fill: %s99; -fx-stroke: black;", cssColor));
-            center.getChildren().add(baseTile);
-
-            // each safe spot
-            List<Cell> safeCells = zone.getCells();
-            for (int s = 0; s < safeCells.size(); s++) {
-                Point2D pt = base.add(dir.multiply((s+1)*SAFE_SPACING));
-                Circle safe = new Circle(pt.getX(), pt.getY(), TILE_RADIUS);
-                safe.setStyle(String.format("-fx-fill: %s66; -fx-stroke: %s;", cssColor, cssColor));
-                center.getChildren().add(safe);
-
-                Line spoke = new Line(prev.getX(), prev.getY(), pt.getX(), pt.getY());
-                spoke.setStyle(String.format("-fx-stroke: %s99;", cssColor));
-                center.getChildren().add(spoke);
-
-                cellPositionMap.put(safeCells.get(s), new int[]{ (int)pt.getX(), (int)pt.getY() });
-                prev = pt;
-            }
-        }
-
-        // 4) Draw home-zones in matching quadrants
-        double homeSize = 100;
-        double offset   = RING_RADIUS - (homeSize / 2);
-        double[][] corners = {
-            { cx + offset,            cy - offset - homeSize }, // RIGHT
-            { cx - offset - homeSize, cy - offset - homeSize }, // TOP
-            { cx - offset - homeSize, cy + offset },            // LEFT
-            { cx + offset,            cy + offset }             // BOTTOM
-        };
-        for (model.Colour col : model.Colour.values()) {
-            int colour = col.ordinal();
-            
-            // Use the mapping to get the correct quadrant for this color
-            Integer positionIndex = colorToPositionMap.get(colour);
-            if (positionIndex == null) {
-                // Fallback just in case
-                positionIndex = colour;
-            }
-            
-            Rectangle rect = new Rectangle(
-                corners[positionIndex][0],
-                corners[positionIndex][1],
-                homeSize, homeSize
-            );
-            rect.setStyle(String.format("-fx-fill: %s33; -fx-stroke: %s;", 
-                                       colors[colour], colors[colour]));
-            rect.setStrokeWidth(2);
-            center.getChildren().add(rect);
-        }
-
-        // --- Assemble BorderPane with centered panels ---
-        BorderPane root = new BorderPane();
-        root.setCenter(center);
-
-        // Left
-        Pane leftPane = createSidePanel(icons[leftIdx], false, names[leftIdx], colors[leftIdx]);
-        leftPane.setPrefHeight(WINDOW_SIZE);
-        BorderPane.setAlignment(leftPane, Pos.CENTER);
-        root.setLeft(leftPane);
-
-        // Right
-        Pane rightPane = createSidePanel(icons[rightIdx], false, names[rightIdx], colors[rightIdx]);
-        rightPane.setPrefHeight(WINDOW_SIZE);
-        BorderPane.setAlignment(rightPane, Pos.CENTER);
-        root.setRight(rightPane);
-
-        // Top
-        Pane topPane = createSidePanel(icons[topIdx], true, names[topIdx], colors[topIdx]);
-        topPane.setPrefWidth(WINDOW_SIZE);
-        BorderPane.setAlignment(topPane, Pos.CENTER);
-        root.setTop(topPane);
-
-        // Bottom
-        Pane bottomPane = createSidePanel(icons[bottomIdx], true, names[bottomIdx], colors[bottomIdx]);
-        bottomPane.setPrefWidth(WINDOW_SIZE);
-        BorderPane.setAlignment(bottomPane, Pos.CENTER);
-        root.setBottom(bottomPane);
-
-        // Background
-        root.setStyle(
-            "-fx-background-image: url('/images/tile.png');" +
-            "-fx-background-repeat: repeat repeat;" +
-            "-fx-background-position: center center;"
-        );
-
-        return root;
+        // Note: Storing coordinates as int might lose precision if needed later
+        cellPositionMap.put(board.getTrack().get(i), new int[]{ (int)x, (int)y });
     }
-    private static Pane createSidePanel(Image icon, boolean horizontal, String name, String color) {
+
+    // 2) Draw links between tiles
+    for (int i = 0; i < TRACK_CELLS; i++) {
+        Point2D p1 = trackPts[i];
+        Point2D p2 = trackPts[(i+1)%TRACK_CELLS];
+        Line link = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+        link.setStroke(Color.DARKGRAY);
+        center.getChildren().add(link);
+    }
+
+    // 3) Draw safe-zones in the right quadrant order
+    for (SafeZone zone : board.getSafeZones()) {
+        int colour = zone.getColour().ordinal();
+
+        // Use the mapping to get the correct quadrant for this color
+        Integer positionIndex = colorToPositionMap.get(colour);
+        if (positionIndex == null) {
+            // Fallback just in case
+            positionIndex = colour;
+        }
+
+        int idx = positionIndex * (TRACK_CELLS / 4);
+        Point2D base = trackPts[idx];
+
+        // direction inward toward center
+        Point2D dir = new Point2D(cx - base.getX(), cy - base.getY()).normalize();
+        Point2D prev = base;
+        String cssColor = colors[colour];
+
+        // base circle
+        Circle baseTile = new Circle(base.getX(), base.getY(), TILE_RADIUS);
+        baseTile.setStyle(String.format("-fx-fill: %s99; -fx-stroke: black;", cssColor));
+        center.getChildren().add(baseTile);
+
+        // each safe spot
+        List<Cell> safeCells = zone.getCells();
+        for (int s = 0; s < safeCells.size(); s++) {
+            Point2D pt = base.add(dir.multiply((s+1)*SAFE_SPACING));
+            Circle safe = new Circle(pt.getX(), pt.getY(), TILE_RADIUS);
+            safe.setStyle(String.format("-fx-fill: %s66; -fx-stroke: %s;", cssColor, cssColor));
+            center.getChildren().add(safe);
+
+            Line spoke = new Line(prev.getX(), prev.getY(), pt.getX(), pt.getY());
+            spoke.setStyle(String.format("-fx-stroke: %s99;", cssColor));
+            center.getChildren().add(spoke);
+
+            // Note: Storing coordinates as int might lose precision if needed later
+            cellPositionMap.put(safeCells.get(s), new int[]{ (int)pt.getX(), (int)pt.getY() });
+            prev = pt;
+        }
+    }
+
+    // 4) Draw home-zones in matching quadrants
+    double homeSize = 100;
+    double offset   = RING_RADIUS - (homeSize / 2);
+
+    double[][] corners = {
+        { cx + offset,            cy + offset },            // RIGHT (bottom-right)
+        { cx - offset - homeSize, cy + offset },            // BOTTOM (bottom-left)
+        { cx - offset - homeSize, cy - offset - homeSize }, // LEFT (top-left)
+        { cx + offset,            cy - offset - homeSize }  // TOP (top-right)
+    };
+
+    // Pieces per player
+    final int PIECES_PER_PLAYER = 4;
+    final double PIECE_SIZE = homeSize / 4;
+
+    for (model.Colour col : model.Colour.values()) {
+        int colour = col.ordinal();
+
+        // Use the mapping to get the correct quadrant for this color
+        Integer positionIndex = colorToPositionMap.get(colour);
+        if (positionIndex == null) {
+            // Fallback just in case
+            positionIndex = colour;
+        }
+
+        // Draw the home zone rectangle
+        Rectangle rect = new Rectangle(
+            corners[positionIndex][0],
+            corners[positionIndex][1],
+            homeSize, homeSize
+        );
+        rect.setStyle(String.format("-fx-fill: %s33; -fx-stroke: %s;",
+                                   colors[colour], colors[colour]));
+        rect.setStrokeWidth(2);
+        center.getChildren().add(rect);
+
+        // Add game pieces inside home zone
+        double startX = corners[positionIndex][0] + (homeSize - 3*PIECE_SIZE) / 2;
+        double startY = corners[positionIndex][1] + (homeSize - 3*PIECE_SIZE) / 2;
+
+        // Position for 4 pieces in a 2x2 grid
+        for (int row = 0; row < 2; row++) {
+            for (int column = 0; column < 2; column++) {
+                double pieceX = startX + column * 2 * PIECE_SIZE;
+                double pieceY = startY + row * 2 * PIECE_SIZE;
+
+                Circle piece = new Circle(pieceX + PIECE_SIZE/2, pieceY + PIECE_SIZE/2, PIECE_SIZE/2);
+                piece.setStyle(String.format("-fx-fill: %s; -fx-stroke: black; -fx-stroke-width: 1;", colors[colour]));
+
+                // Add piece shadow for 3D effect
+                Circle shadow = new Circle(pieceX + PIECE_SIZE/2 + 2, pieceY + PIECE_SIZE/2 + 2, PIECE_SIZE/2);
+                shadow.setStyle("-fx-fill: #00000055; -fx-stroke: transparent;");
+
+                // Add pieces in correct z-order (shadow behind piece)
+                center.getChildren().add(shadow);
+                center.getChildren().add(piece);
+            }
+        }
+    }
+
+    // --- Assemble BorderPane with centered panels ---
+    BorderPane root = new BorderPane();
+
+    // Add padding to compensate for shifted board
+    // Adjust bottom padding - can be refined based on desired spacing
+    root.setPadding(new Insets(0, 0, 20, 0)); // Reduced bottom padding
+
+    // Set the center node
+    root.setCenter(center);
+
+    // Configure bottom panel - Removed fixed height
+    Pane bottomPane = createSidePanel(icons[bottomIdx], true, names[bottomIdx], colors[bottomIdx]);
+    // bottomPane.setPrefWidth(WINDOW_SIZE); // Can keep or remove this depending on desired behavior
+    // bottomPane.setPrefHeight(60); // Removed fixed height
+    BorderPane.setAlignment(bottomPane, Pos.CENTER);
+    root.setBottom(bottomPane);
+
+    // Left panel
+    Pane leftPane = createSidePanel(icons[leftIdx], false, names[leftIdx], colors[leftIdx]);
+    // leftPane.setPrefHeight(WINDOW_SIZE - 80); // Can keep or remove this
+    BorderPane.setAlignment(leftPane, Pos.CENTER);
+    root.setLeft(leftPane);
+
+    // Right panel
+    Pane rightPane = createSidePanel(icons[rightIdx], false, names[rightIdx], colors[rightIdx]);
+    // rightPane.setPrefHeight(WINDOW_SIZE - 80); // Can keep or remove this
+    BorderPane.setAlignment(rightPane, Pos.CENTER);
+    root.setRight(rightPane);
+
+    // Top panel
+    Pane topPane = createSidePanel(icons[topIdx], true, names[topIdx], colors[topIdx]);
+    // topPane.setPrefWidth(WINDOW_SIZE); // Can keep or remove this
+    BorderPane.setAlignment(topPane, Pos.CENTER);
+    root.setTop(topPane);
+
+    // Background
+    root.setStyle(
+        "-fx-background-image: url('/images/tile.png');" +
+        "-fx-background-repeat: repeat repeat;" +
+        "-fx-background-position: center center;"
+    );
+
+    return root;
+}
+
+private static Pane createSidePanel(Image icon, boolean horizontal, String name, String color) {
+        // The placeholder size seems intended for a specific layout.
+        // Making the side panels flexible might require adjusting or removing this.
+        // Let's keep it for now but be aware it might constrain flexibility.
         double w = 4 * CELL_SIZE, h = CELL_SIZE;
         Region placeholder = new Region();
         placeholder.setPrefSize(w, h);
-        placeholder.setMinSize(w, h);
-        placeholder.setMaxSize(w, h);
+        placeholder.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE); // Use preferred size as minimum
+        placeholder.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE); // Use preferred size as maximum
         placeholder.setStyle("-fx-border-color: gray; -fx-border-style: dashed;");
 
         ImageView iv = new ImageView(icon);
@@ -231,19 +282,25 @@ public class BoardView {
         nameLabel.setMaxWidth(CELL_SIZE * 2);
         nameLabel.setAlignment(Pos.CENTER);
         nameLabel.setStyle("-fx-font-size: 2em; -fx-text-fill: " + color + ";");
+        nameLabel.setMinHeight(Region.USE_PREF_SIZE); // Prevent label from shrinking too much
 
         if (horizontal) {
             VBox iconBox = new VBox(5, iv, nameLabel);
             iconBox.setAlignment(Pos.CENTER);
+            // Allow the iconBox to take necessary height
             HBox box = new HBox(10, iconBox, placeholder);
             box.setAlignment(Pos.CENTER);
             box.setPadding(new Insets(10));
-            HBox.setHgrow(placeholder, Priority.NEVER);
+            HBox.setHgrow(placeholder, Priority.NEVER); // Placeholder doesn't grow horizontally
+            // Consider adding VBox.setVgrow(iconBox, Priority.SOMETIMES); if vertical flexibility is needed within the HBox
             return box;
         } else {
             VBox box = new VBox(5, iv, nameLabel, placeholder);
             box.setAlignment(Pos.CENTER);
             box.setPadding(new Insets(10));
+            // Allow the VBox to take necessary width
+            VBox.setVgrow(placeholder, Priority.NEVER); // Placeholder doesn't grow vertically
+            // Consider adding HBox.setHgrow(iconBox, Priority.SOMETIMES); if horizontal flexibility is needed within the VBox
             return box;
         }
     }

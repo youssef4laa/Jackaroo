@@ -46,56 +46,15 @@ public class Main extends Application {
         BorderPane root = BoardView.create(playerName); // <-- Use the static factory method
         Scene scene = new Scene(root);                  // <-- Use root directly
         stage.setScene(scene);
-        stage.sizeToScene();
+        // stage.sizeToScene(); // Removing sizeToScene might allow the window to be smaller than the preferred size, potentially showing clipping
         stage.setTitle("Jackaroo — Welcome, " + playerName);
-        stage.setResizable(false);
+        stage.setResizable(false); // Keeping resizable false for now, but flexible layout is key for resizable
         stage.show();
     }
 
 
 
-    /**
-     * Creates a side panel containing the player's icon, colored name below at double size, and a placeholder.
-     * @param icon      The player icon
-     * @param horizontal Whether panel is horizontal (top/bottom) or vertical (left/right)
-     * @param name      The display name, e.g. "Mr. Red"
-     * @param color     The CSS color for the name text
-     */
-    private Pane createSidePanel(Image icon, boolean horizontal, String name, String color) {
-        double w = 4 * CELL_SIZE, h = CELL_SIZE;
-        Region placeholder = new Region();
-        placeholder.setPrefSize(w, h);
-        placeholder.setMinSize(w, h);
-        placeholder.setMaxSize(w, h);
-        placeholder.setStyle("-fx-border-color: gray; -fx-border-style: dashed;");
-
-        ImageView iv = new ImageView(icon);
-        iv.setFitWidth(CELL_SIZE * 2);
-        iv.setFitHeight(CELL_SIZE * 2);
-        iv.setPreserveRatio(true);
-
-        Label nameLabel = new Label(name);
-        nameLabel.setWrapText(true);
-        nameLabel.setMaxWidth(CELL_SIZE * 2);
-        nameLabel.setAlignment(Pos.CENTER);
-        nameLabel.setStyle("-fx-font-size: 2em; -fx-text-fill: " + color + ";");
-
-        if (horizontal) {
-            VBox iconBox = new VBox(5, iv, nameLabel);
-            iconBox.setAlignment(Pos.CENTER);
-            HBox box = new HBox(10, iconBox, placeholder);
-            box.setAlignment(Pos.CENTER);
-            box.setPadding(new Insets(10));
-            HBox.setHgrow(placeholder, Priority.NEVER);
-            return box;
-        } else {
-            VBox box = new VBox(5, iv, nameLabel, placeholder);
-            box.setAlignment(Pos.CENTER);
-            box.setPadding(new Insets(10));
-            return box;
-        }
-    }
-
+  
     private void showErrorAndExit(String msg) {
         Alert alert = new Alert(AlertType.ERROR);
         alert.setTitle("Initialization Error");
