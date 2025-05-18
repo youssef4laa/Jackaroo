@@ -574,110 +574,70 @@ public class BoardView {
 
 	/**
 	 * 
-	 * Draw each player’s 2×2 home square in the same compass-rotated spot
+	 * Draw each player's 2×2 home square in the corner next to their panel
 	 * 
 	 */
-
 	public void drawHomeZones(Board board, Map<Integer, PlayerPanelInfo> playerPanelInfoMap) {
-
 		double homeSize = 100;
-
-		double margin = 20; // gap between circle and home-zone
-
-		double halfHome = homeSize / 2;
+		double margin = 20; // gap between window edge and home-zone
 
 		for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
-
 			int panelIdx = e.getKey();
-
 			PlayerPanelInfo info = e.getValue();
 
-// figure out where this player’s panel ended up
-
+			// figure out which corner to place the home zone based on panel position
 			PanelPosition pos = mapQuadToPosition(quadrantOrder.get(panelIdx));
-
 			double x0 = 0, y0 = 0;
 
 			switch (pos) {
-
 			case TOP:
-
-				x0 = calculatedCenterX - halfHome;
-
-				y0 = calculatedCenterY - ringRadius - margin - homeSize;
-
+				// Top-left corner
+				x0 = margin;
+				y0 = margin;
 				break;
-
 			case BOTTOM:
-
-				x0 = calculatedCenterX - halfHome;
-
-				y0 = calculatedCenterY + ringRadius + margin;
-
+				// Bottom-right corner
+				x0 = windowSize - margin - homeSize;
+				y0 = windowSize - margin - homeSize;
 				break;
-
 			case LEFT:
-
-				x0 = calculatedCenterX - ringRadius - margin - homeSize;
-
-				y0 = calculatedCenterY - halfHome;
-
+				// Bottom-left corner
+				x0 = margin;
+				y0 = windowSize - margin - homeSize;
 				break;
-
 			case RIGHT:
-
-				x0 = calculatedCenterX + ringRadius + margin;
-
-				y0 = calculatedCenterY - halfHome;
-
+				// Top-right corner
+				x0 = windowSize - margin - homeSize;
+				y0 = margin;
 				break;
-
 			}
 
-// draw the tinted home-zone rectangle
-
+			// draw the tinted home-zone rectangle
 			Rectangle rect = new Rectangle(x0, y0, homeSize, homeSize);
-
 			rect.setStyle(String.format("-fx-fill: %s33; -fx-stroke: %s;", info.cssColor, info.cssColor));
-
 			rect.setStrokeWidth(2);
-
 			centerPane.getChildren().add(rect);
 
-// populate the 2×2 starting pieces inside
-
+			// populate the 2×2 starting pieces inside
 			double cell = homeSize / 2;
-
 			for (int r = 0; r < 2; r++) {
-
 				for (int c = 0; c < 2; c++) {
-
 					double cx = x0 + c * cell + cell / 2;
-
 					double cy = y0 + r * cell + cell / 2;
-
 					double pr = (cell / 2) * 0.8;
 
 					Circle shadow = new Circle(cx + 2, cy + 2, pr);
-
 					shadow.setStyle("-fx-fill: #00000055; -fx-stroke: transparent;");
 
 					Circle piece = new Circle(cx, cy, pr);
-
 					piece.setStyle(String.format(
-
 							"-fx-fill: %s; -fx-stroke: black; -fx-stroke-width: 1;",
-
 							info.cssColor));
 
 					centerPane.getChildren().addAll(shadow, piece);
-
 				}
-
 			}
-
 		}
-
 	}
 
 	public void setPlayerPanel(Pane panel, PanelPosition position) {
