@@ -1,67 +1,76 @@
 package view;
 
-import engine.Game;
+import controller.BoardController; // Import the BoardController
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 
 public class Main extends Application {
-    private static final int ROWS = 10;
-    private static final int COLS = 10;
-    private static final double CELL_SIZE = 60;
+
+    // These constants seem related to an older grid-based approach,
+    // they might not be needed with the new BoardView/Controller structure
+    // private static final int ROWS = 10;
+    // private static final int COLS = 10;
+    // private static final double CELL_SIZE = 60;
 
     @Override
     public void start(Stage primaryStage) {
         StartMenu startMenu = new StartMenu(primaryStage);
         startMenu.show(playerName -> {
             try {
+                // Call buildGameUI with the stage and player name
                 buildGameUI(primaryStage, playerName);
             } catch (IOException e) {
+                // Handle potential IO errors during game setup (e.g., loading resources)
                 showErrorAndExit("Failed to start game: " + e.getMessage());
+            } catch (Exception e) {
+                // Catch any other unexpected exceptions during UI building
+                showErrorAndExit("An unexpected error occurred: " + e.getMessage());
+                e.printStackTrace(); // Print stack trace for debugging
             }
         });
     }
 
     private void buildGameUI(Stage stage, String playerName) throws IOException {
-        BorderPane root = BoardView.create(playerName); // <-- Use the static factory method
-        Scene scene = new Scene(root);                  // <-- Use root directly
+        // Instantiate the BoardController, which sets up the game model and view
+        BoardController boardController = new BoardController(playerName);
+
+        // Get the root JavaFX node (the BorderPane) from the controller
+        BorderPane root = boardController.getGameView();
+
+        // Create a new scene with the root node provided by the controller
+        Scene scene = new Scene(root);
+
+        // Set the scene on the primary stage
         stage.setScene(scene);
-        // stage.sizeToScene(); // Removing sizeToScene might allow the window to be smaller than the preferred size, potentially showing clipping
+
+        // Set the stage title
         stage.setTitle("Jackaroo — Welcome, " + playerName);
-        stage.setResizable(false); // Keeping resizable false for now, but flexible layout is key for resizable
+
+        // You can adjust resizable based on whether your layout handles resizing well
+        // stage.setResizable(false); // Keeping resizable false for now
+
+        // Display the stage
         stage.show();
     }
 
-
-
-  
+    /**
+     * Displays an error alert and exits the application.
+     * @param msg The error message to display.
+     */
     private void showErrorAndExit(String msg) {
         Alert alert = new Alert(AlertType.ERROR);
-        alert.setTitle("Initialization Error");
-        alert.setHeaderText(null);
+        alert.setTitle("Application Error");
+        alert.setHeaderText("Fatal Error");
         alert.setContentText(msg);
         alert.showAndWait();
-        Platform.exit();
+        Platform.exit(); // Exit the JavaFX application
+        System.exit(1); // Ensure the process terminates
     }
 
     public static void main(String[] args) {

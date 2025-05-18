@@ -1,307 +1,411 @@
 package view;
 
-import engine.Game;
-import engine.GameManager;
 import engine.board.Board;
+import java.util.ArrayList;
+import java.util.Optional;
+import engine.board.Cell;
 import engine.board.SafeZone;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
-import javafx.stage.Stage;
-import model.Colour;
-import engine.board.Cell;
-import javafx.application.Application;
-import javafx.geometry.Point2D;
-import javafx.scene.Scene;
-import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import javafx.stage.Stage;
+import model.Colour; // Import Colour enum
 
-
-import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Arrays;
+import java.util.Collections;
 
 public class BoardView {
-	private static Board board;
-	private static final Map<Cell, int[]> cellPositionMap = new HashMap<>();
-    private static final int ROWS = 10;
-    private static final int COLS = 10;
-    private static final double CELL_SIZE = 60;
+
+	private BorderPane rootPane;
+	private Pane centerPane; // The main area for the track, safe zones, etc.
+
+	// Made non-static, specific to this view instance
+	private final Map<Cell, Point2D> cellPositionMap = new HashMap<>();
+
+	private static final double DEFAULT_WINDOW_SIZE = 800; // Used for default calculations
+	private static final double CELL_SIZE_FOR_PANELS = 60; // For player panels
+
+	// Configuration for drawing, can be adjusted
+	private double windowSize = DEFAULT_WINDOW_SIZE;
+	private double ringRadius = 300;
+	private double tileRadius = 12;
+	private double safeSpacingMultiplier = 2.2;
+	private double verticalShift = -80; // To shift the center drawing up
+
+	private double calculatedCenterX;
+	private double calculatedCenterY;
+	private final List<Integer> quadrantOrder;
+
+	public BoardView() {
+		this.rootPane = new BorderPane();
+		this.centerPane = new Pane();
+		this.rootPane.setCenter(centerPane);
+		this.rootPane.setPadding(new Insets(0, 0, 20, 0)); // Default padding
+
+		// Calculate center points based on window size and shift
+		this.calculatedCenterX = windowSize / 2;
+		this.calculatedCenterY = windowSize / 2 + verticalShift;
+		quadrantOrder = new ArrayList<>(Arrays.asList(0, 1, 2, 3));
+		Collections.shuffle(quadrantOrder);
+
+		// Default background, can be overridden by controller
+		this.rootPane.setStyle("-fx-background-image: url('/images/tile.png');"
+				+ "-fx-background-repeat: repeat repeat;" + "-fx-background-position: center center;");
+	}
+
+	public BorderPane getRootPane() {
+		return rootPane;
+	}
+
+	public Pane getCenterPane() {
+		return centerPane;
+	}
+
+	public Map<Cell, Point2D> getCellPositionMap() {
+		return cellPositionMap;
+	}
+
+	/**
+	 * Automatically lay out player panels according to the shuffled quadrant order.
+	 */
+	private void layoutPlayerPanels(Map<Integer, Pane> panelPanes) {
+		for (Map.Entry<Integer, Pane> entry : panelPanes.entrySet()) {
+			int panelIdx = entry.getKey();
+			Pane panel = entry.getValue();
+			// Determine which quadrant this panel should occupy
+			int quad = quadrantOrder.get(panelIdx);
+			PanelPosition pos = mapQuadToPosition(quad);
+			setPlayerPanel(panel, pos);
+		}
+	}
+
+	/**
+	 * Map shuffled quadrant index (0-3) to a PanelPosition enum.
+	 */
+	private PanelPosition mapQuadToPosition(int quad) {
+		switch (quad) {
+		case 0:
+			return PanelPosition.BOTTOM;
+		case 1:
+			return PanelPosition.LEFT;
+		case 2:
+			return PanelPosition.TOP;
+		case 3:
+			return PanelPosition.RIGHT;
+		default:
+			throw new IllegalArgumentException("Invalid quadrant: " + quad);
+		}
+	}
+
+	/**
+	 * Draw the game board and auto-layout player panels.
+	 */
+	public void drawGameBoard(Board board, Map<Integer, PlayerPanelInfo> playerPanelInfoMap,
+			FiredeckView firedeckView) {
+		centerPane.getChildren().clear(); // Clear previous drawings if any
+		cellPositionMap.clear();
+
+		// First, create and layout player panels based on shuffled quadrants
+		Map<Integer, Pane> panelPanes = new HashMap<>();
+		for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
+			PlayerPanelInfo info = e.getValue();
+			// Orientation: top/bottom panels horizontal, left/right vertical
+			// But we can derive orientation from the target position
+			int quad = quadrantOrder.get(e.getKey());
+			PanelPosition pos = mapQuadToPosition(quad);
+			boolean horizontal = (pos == PanelPosition.TOP || pos == PanelPosition.BOTTOM);
+			Pane panel = createPlayerPanelUI(info.icon, horizontal, info.name, info.cssColor);
+			panelPanes.put(e.getKey(), panel);
+		}
+		layoutPlayerPanels(panelPanes);
+
+		// Draw board elements
+		final int TRACK_CELLS = board.getTrack().size();
+		Point2D[] trackPts = drawTrack(board.getTrack(), TRACK_CELLS);
+		drawLinks(trackPts);
+		drawSafeZones(board, trackPts, playerPanelInfoMap);
+		drawHomeZones(board, playerPanelInfoMap);
+
+		// Add FiredeckView to the center
+		if (firedeckView != null) {
+			double firedeckWidth = firedeckView.getPrefWidth();
+			double firedeckHeight = firedeckView.getPrefHeight();
+			if (firedeckWidth <= 0 || firedeckHeight <= 0) {
+				firedeckWidth = 150;
+				firedeckHeight = 100;
+				firedeckView.setPrefSize(firedeckWidth, firedeckHeight);
+			}
+			double firedeckX = calculatedCenterX - firedeckWidth / 2;
+			double firedeckY = calculatedCenterY - firedeckHeight / 2;
+			firedeckView.setLayoutX(firedeckX);
+			firedeckView.setLayoutY(firedeckY);
+			centerPane.getChildren().add(firedeckView);
+			firedeckView.toFront();
+		}
+	}
+
+	private Point2D[] drawTrack(List<Cell> trackCells, int totalTrackCells) {
+		Point2D[] trackPts = new Point2D[totalTrackCells];
+		for (int i = 0; i < totalTrackCells; i++) {
+			double angle = 2 * Math.PI * i / totalTrackCells;
+			double x = calculatedCenterX + ringRadius * Math.cos(angle);
+			double y = calculatedCenterY + ringRadius * Math.sin(angle);
+			trackPts[i] = new Point2D(x, y);
+
+			Circle tile = new Circle(x, y, tileRadius, Color.BEIGE);
+			tile.setStroke(Color.GRAY);
+			centerPane.getChildren().add(tile);
+
+			cellPositionMap.put(trackCells.get(i), new Point2D(x, y));
+		}
+		return trackPts;
+	}
+
+	private void drawLinks(Point2D[] trackPts) {
+		for (int i = 0; i < trackPts.length; i++) {
+			Point2D p1 = trackPts[i];
+			Point2D p2 = trackPts[(i + 1) % trackPts.length];
+			Line link = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+			link.setStroke(Color.DARKGRAY);
+			centerPane.getChildren().add(link);
+			link.toBack(); // Send links behind tiles
+		}
+	}
+
+	// Modified drawSafeZones ... [rest unchanged]
+
+	// drawSafeZones and drawHomeZones methods remain as before, using quadrantOrder
+	// for placement.
+
+	public Pane createPlayerPanelUI(Image icon, boolean horizontalLayout, String name, String cssColor) {
+		double placeholderWidth = 4 * CELL_SIZE_FOR_PANELS;
+		double placeholderHeight = CELL_SIZE_FOR_PANELS;
+		Region placeholder = new Region();
+		placeholder.setPrefSize(placeholderWidth, placeholderHeight);
+		placeholder.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+		placeholder.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+		placeholder.setStyle("-fx-border-color: gray; -fx-border-style: dashed; -fx-background-color: #FFFFFF1A;");
+
+		ImageView iv = new ImageView(icon);
+		double iconSize = CELL_SIZE_FOR_PANELS * 1.5;
+		iv.setFitWidth(iconSize);
+		iv.setFitHeight(iconSize);
+		iv.setPreserveRatio(true);
+
+		Label nameLabel = new Label(name);
+		nameLabel.setWrapText(true);
+		nameLabel.setMaxWidth(CELL_SIZE_FOR_PANELS * 2);
+		nameLabel.setAlignment(Pos.CENTER);
+		nameLabel.setStyle("-fx-font-size: 1.5em; -fx-text-fill: " + cssColor + "; -fx-font-weight: bold;");
+		nameLabel.setMinHeight(Region.USE_PREF_SIZE);
+
+		StackPane iconPane = new StackPane(iv);
+		iconPane.setPrefSize(iconSize, iconSize);
+		iconPane.setAlignment(Pos.CENTER);
+
+		Pane layoutPane;
+		if (horizontalLayout) {
+			VBox nameAndIconBox = new VBox(5, iconPane, nameLabel);
+			nameAndIconBox.setAlignment(Pos.CENTER);
+			HBox box = new HBox(10, nameAndIconBox, placeholder);
+			box.setAlignment(Pos.CENTER);
+			box.setPadding(new Insets(5));
+			HBox.setHgrow(placeholder, Priority.ALWAYS);
+			HBox.setHgrow(nameAndIconBox, Priority.NEVER);
+			box.setPrefHeight(iconSize + nameLabel.getFont().getSize() + 20);
+			layoutPane = box;
+		} else {
+			VBox box = new VBox(5, iconPane, nameLabel, placeholder);
+			box.setAlignment(Pos.CENTER);
+			box.setPadding(new Insets(5));
+			VBox.setVgrow(placeholder, Priority.ALWAYS);
+			box.setPrefWidth(iconSize + 20);
+			layoutPane = box;
+		}
+		return layoutPane;
+	}
+
+	public enum PanelPosition {
+		TOP, BOTTOM, LEFT, RIGHT
+	}
+
+	public static class PlayerPanelInfo {
+	    public final Image icon;
+	    public final String name;
+	    public final String cssColor;
+	    public final PanelPosition position;
+	    public final boolean isHorizontal;
+	    public final Colour playerColor;
+
+	    public PlayerPanelInfo(Image icon,
+	                           String name,
+	                           String cssColor,
+	                           PanelPosition position,
+	                           boolean isHorizontal,
+	                           Colour playerColor) {
+	        this.icon = icon;
+	        this.name = name;
+	        this.cssColor = cssColor;
+	        this.position = position;
+	        this.isHorizontal = isHorizontal;
+	        this.playerColor = playerColor;
+	    }
+	}
 
 
-public static BorderPane create(String playerName) throws IOException {
-    Game game = new Game(playerName);
-    board = game.getBoard();
+	/**
+ * Draw each player’s safe zone by:
+ *  1) looking up the shuffled quadrant for that player
+ *  2) mapping it to a PanelPosition (TOP/BOTTOM/LEFT/RIGHT)
+ *  3) picking the corresponding track‐cell as the “base”
+ *  4) stamping circles inward toward center
+ */
+public void drawSafeZones(Board board, Point2D[] trackPts, Map<Integer, PlayerPanelInfo> playerPanelInfoMap) {
+    final int total = trackPts.length;
+    final double SAFESP = tileRadius * safeSpacingMultiplier;
+    for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
+        int panelIdx = e.getKey();
+        PlayerPanelInfo info = e.getValue();
 
-    Image[] icons = new Image[] {
-        new Image(BoardView.class.getResourceAsStream("/images/player_red.png")),
-        new Image(BoardView.class.getResourceAsStream("/images/player_green.png")),
-        new Image(BoardView.class.getResourceAsStream("/images/player_blue.png")),
-        new Image(BoardView.class.getResourceAsStream("/images/player_yellow.png"))
-    };
-    String[] names  = { "Mr. Red", "Mr. Green", "Mr. Blue", "Mr. Yellow" };
-    String[] colors = { "red", "green", "blue", "goldenrod" };
+        // 1/2: get shuffled quadrant and map to a compass position
+        PanelPosition pos = mapQuadToPosition(quadrantOrder.get(panelIdx));
 
-    // randomize panel positions
-    List<Integer> order = Arrays.asList(0,1,2,3);
-    Collections.shuffle(order);
-    Random rnd = new Random();
-    int humanIdx = rnd.nextInt(4);
-    names[humanIdx] = playerName;
-
-    int leftIdx   = order.get(0);
-    int topIdx    = order.get(1);
-    int rightIdx  = order.get(2);
-    int bottomIdx = order.get(3);
-
-    // Assign colors to their respective positions
-    // Create a map to link color ordinals to their index in the panel order
-    Map<Integer, Integer> colorToPositionMap = new HashMap<>();
-    colorToPositionMap.put(leftIdx, 2);   // LEFT = 2
-    colorToPositionMap.put(topIdx, 3);    // TOP = 3
-    colorToPositionMap.put(rightIdx, 0);  // RIGHT = 0
-    colorToPositionMap.put(bottomIdx, 1); // BOTTOM = 1
-
-    final double WINDOW_SIZE  = 800; // Consider making this dynamic or using bindings if more advanced resizing is needed
-    final int    TRACK_CELLS  = board.getTrack().size();
-    final double RING_RADIUS  = 300;
-    final double TILE_RADIUS  = 12;
-    final double SAFE_SPACING = TILE_RADIUS * 2.2;
-
-    // --- Center pane with ring + safe + home ---
-    Pane center = new Pane();
-    // Removed fixed size to allow BorderPane to manage it
-    // center.setPrefSize(WINDOW_SIZE, WINDOW_SIZE);
-
-    // Adjust vertical position - shifting everything up
-    // The vertical shift and bottom padding are used to visually center the circle.
-    // Keep these for now, but they might need refinement for more flexible layouts.
-    double verticalShift = -80; // Negative value shifts up
-    double cx = WINDOW_SIZE/2;
-    double cy = WINDOW_SIZE/2 + verticalShift;
-
-    // 1) Draw track tiles
-    Point2D[] trackPts = new Point2D[TRACK_CELLS];
-    for (int i = 0; i < TRACK_CELLS; i++) {
-        double angle = 2 * Math.PI * i / TRACK_CELLS;
-        double x = cx + RING_RADIUS * Math.cos(angle);
-        double y = cy + RING_RADIUS * Math.sin(angle);
-        trackPts[i] = new Point2D(x, y);
-
-        Circle tile = new Circle(x, y, TILE_RADIUS, Color.BEIGE);
-        tile.setStroke(Color.GRAY);
-        center.getChildren().add(tile);
-
-        // Note: Storing coordinates as int might lose precision if needed later
-        cellPositionMap.put(board.getTrack().get(i), new int[]{ (int)x, (int)y });
-    }
-
-    // 2) Draw links between tiles
-    for (int i = 0; i < TRACK_CELLS; i++) {
-        Point2D p1 = trackPts[i];
-        Point2D p2 = trackPts[(i+1)%TRACK_CELLS];
-        Line link = new Line(p1.getX(), p1.getY(), p2.getX(), p2.getY());
-        link.setStroke(Color.DARKGRAY);
-        center.getChildren().add(link);
-    }
-
-    // 3) Draw safe-zones in the right quadrant order
-    for (SafeZone zone : board.getSafeZones()) {
-        int colour = zone.getColour().ordinal();
-
-        // Use the mapping to get the correct quadrant for this color
-        Integer positionIndex = colorToPositionMap.get(colour);
-        if (positionIndex == null) {
-            // Fallback just in case
-            positionIndex = colour;
+        // 3: pick the track‐cell index that corresponds to that compass point
+        int baseIdx;
+        switch (pos) {
+            case RIGHT:  baseIdx = 0;             break;
+            case BOTTOM: baseIdx = total / 4;     break;
+            case LEFT:   baseIdx = total / 2;     break;
+            case TOP:    baseIdx = 3 * total / 4; break;
+            default:     throw new IllegalStateException();
         }
+        Point2D base = trackPts[baseIdx];
 
-        int idx = positionIndex * (TRACK_CELLS / 4);
-        Point2D base = trackPts[idx];
+        // draw the “base” circle
+        Circle baseTile = new Circle(base.getX(), base.getY(), tileRadius);
+        baseTile.setStyle(String.format("-fx-fill: %s99; -fx-stroke: black;", info.cssColor));
+        centerPane.getChildren().add(baseTile);
 
-        // direction inward toward center
-        Point2D dir = new Point2D(cx - base.getX(), cy - base.getY()).normalize();
+        // 4: draw the inward “spokes” of safe‐cells
+        Point2D dir = new Point2D(calculatedCenterX - base.getX(),
+                                  calculatedCenterY - base.getY()).normalize();
         Point2D prev = base;
-        String cssColor = colors[colour];
+        Optional<SafeZone> optZ = board.getSafeZones().stream()
+            .filter(z -> z.getColour() == info.playerColor)
+            .findFirst();
+        if (!optZ.isPresent()) continue;
 
-        // base circle
-        Circle baseTile = new Circle(base.getX(), base.getY(), TILE_RADIUS);
-        baseTile.setStyle(String.format("-fx-fill: %s99; -fx-stroke: black;", cssColor));
-        center.getChildren().add(baseTile);
+        for (int i = 0; i < optZ.get().getCells().size(); i++) {
+            Point2D p = base.add(dir.multiply((i + 1) * SAFESP));
 
-        // each safe spot
-        List<Cell> safeCells = zone.getCells();
-        for (int s = 0; s < safeCells.size(); s++) {
-            Point2D pt = base.add(dir.multiply((s+1)*SAFE_SPACING));
-            Circle safe = new Circle(pt.getX(), pt.getY(), TILE_RADIUS);
-            safe.setStyle(String.format("-fx-fill: %s66; -fx-stroke: %s;", cssColor, cssColor));
-            center.getChildren().add(safe);
+            Circle c = new Circle(p.getX(), p.getY(), tileRadius);
+            c.setStyle(String.format("-fx-fill: %s66; -fx-stroke: %s;", info.cssColor, info.cssColor));
+            centerPane.getChildren().add(c);
 
-            Line spoke = new Line(prev.getX(), prev.getY(), pt.getX(), pt.getY());
-            spoke.setStyle(String.format("-fx-stroke: %s99;", cssColor));
-            center.getChildren().add(spoke);
+            Line spoke = new Line(prev.getX(), prev.getY(), p.getX(), p.getY());
+            spoke.setStyle(String.format("-fx-stroke: %s99;", info.cssColor));
+            centerPane.getChildren().add(spoke);
+            spoke.toBack();
 
-            // Note: Storing coordinates as int might lose precision if needed later
-            cellPositionMap.put(safeCells.get(s), new int[]{ (int)pt.getX(), (int)pt.getY() });
-            prev = pt;
+            cellPositionMap.put(optZ.get().getCells().get(i), p);
+            prev = p;
         }
     }
+}
 
-    // 4) Draw home-zones in matching quadrants
-    double homeSize = 100;
-    double offset   = RING_RADIUS - (homeSize / 2);
+	// drawHomeZones logic remains largely correct based on panel position index
+/**
+ * Draw each player’s 2×2 home square in the same compass-rotated spot
+ */
+public void drawHomeZones(Board board, Map<Integer, PlayerPanelInfo> playerPanelInfoMap) {
+    double homeSize   = 100;
+    double offset     = ringRadius - (homeSize / 2);
+    final double CELL = homeSize / 2;
 
+    // Corners in compass order: RIGHT, BOTTOM, LEFT, TOP
     double[][] corners = {
-        { cx + offset,            cy + offset },            // RIGHT (bottom-right)
-        { cx - offset - homeSize, cy + offset },            // BOTTOM (bottom-left)
-        { cx - offset - homeSize, cy - offset - homeSize }, // LEFT (top-left)
-        { cx + offset,            cy - offset - homeSize }  // TOP (top-right)
+        { calculatedCenterX + offset,                    calculatedCenterY - homeSize / 2 }, // RIGHT
+        { calculatedCenterX - homeSize / 2,               calculatedCenterY + offset       }, // BOTTOM
+        { calculatedCenterX - offset - homeSize,          calculatedCenterY - homeSize / 2 }, // LEFT
+        { calculatedCenterX - homeSize / 2,               calculatedCenterY - offset - homeSize }  // TOP
     };
 
-    // Pieces per player
-    final int PIECES_PER_PLAYER = 4;
-    final double PIECE_SIZE = homeSize / 4;
+    for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
+        int idx  = e.getKey();
+        PlayerPanelInfo info = e.getValue();
 
-    for (model.Colour col : model.Colour.values()) {
-        int colour = col.ordinal();
-
-        // Use the mapping to get the correct quadrant for this color
-        Integer positionIndex = colorToPositionMap.get(colour);
-        if (positionIndex == null) {
-            // Fallback just in case
-            positionIndex = colour;
+        PanelPosition pos = mapQuadToPosition(quadrantOrder.get(idx));
+        int corner;
+        switch (pos) {
+            case RIGHT:  corner = 0; break;
+            case BOTTOM: corner = 1; break;
+            case LEFT:   corner = 2; break;
+            case TOP:    corner = 3; break;
+            default:     throw new IllegalStateException();
         }
 
-        // Draw the home zone rectangle
-        Rectangle rect = new Rectangle(
-            corners[positionIndex][0],
-            corners[positionIndex][1],
-            homeSize, homeSize
-        );
-        rect.setStyle(String.format("-fx-fill: %s33; -fx-stroke: %s;",
-                                   colors[colour], colors[colour]));
+        double x0 = corners[corner][0];
+        double y0 = corners[corner][1];
+
+        // draw tinted home-zone
+        Rectangle rect = new Rectangle(x0, y0, homeSize, homeSize);
+        rect.setStyle(String.format("-fx-fill: %s33; -fx-stroke: %s;", info.cssColor, info.cssColor));
         rect.setStrokeWidth(2);
-        center.getChildren().add(rect);
+        centerPane.getChildren().add(rect);
 
-        // Add game pieces inside home zone
-        double startX = corners[positionIndex][0] + (homeSize - 3*PIECE_SIZE) / 2;
-        double startY = corners[positionIndex][1] + (homeSize - 3*PIECE_SIZE) / 2;
+        // draw the 2×2 starting pieces
+        for (int r = 0; r < 2; r++) {
+            for (int c = 0; c < 2; c++) {
+                double cx = x0 + c * CELL + CELL / 2;
+                double cy = y0 + r * CELL + CELL / 2;
+                double pr = (CELL / 2) * 0.8;
 
-        // Position for 4 pieces in a 2x2 grid
-        for (int row = 0; row < 2; row++) {
-            for (int column = 0; column < 2; column++) {
-                double pieceX = startX + column * 2 * PIECE_SIZE;
-                double pieceY = startY + row * 2 * PIECE_SIZE;
-
-                Circle piece = new Circle(pieceX + PIECE_SIZE/2, pieceY + PIECE_SIZE/2, PIECE_SIZE/2);
-                piece.setStyle(String.format("-fx-fill: %s; -fx-stroke: black; -fx-stroke-width: 1;", colors[colour]));
-
-                // Add piece shadow for 3D effect
-                Circle shadow = new Circle(pieceX + PIECE_SIZE/2 + 2, pieceY + PIECE_SIZE/2 + 2, PIECE_SIZE/2);
+                Circle shadow = new Circle(cx + 2, cy + 2, pr);
                 shadow.setStyle("-fx-fill: #00000055; -fx-stroke: transparent;");
 
-                // Add pieces in correct z-order (shadow behind piece)
-                center.getChildren().add(shadow);
-                center.getChildren().add(piece);
+                Circle piece = new Circle(cx, cy, pr);
+                piece.setStyle(String.format(
+                    "-fx-fill: %s; -fx-stroke: black; -fx-stroke-width: 1;",
+                    info.cssColor));
+
+                centerPane.getChildren().addAll(shadow, piece);
             }
         }
     }
-
-    // --- Assemble BorderPane with centered panels ---
-    BorderPane root = new BorderPane();
-
-    // Add padding to compensate for shifted board
-    // Adjust bottom padding - can be refined based on desired spacing
-    root.setPadding(new Insets(0, 0, 20, 0)); // Reduced bottom padding
-
-    // Set the center node
-    root.setCenter(center);
-
-    // Configure bottom panel - Removed fixed height
-    Pane bottomPane = createSidePanel(icons[bottomIdx], true, names[bottomIdx], colors[bottomIdx]);
-    // bottomPane.setPrefWidth(WINDOW_SIZE); // Can keep or remove this depending on desired behavior
-    // bottomPane.setPrefHeight(60); // Removed fixed height
-    BorderPane.setAlignment(bottomPane, Pos.CENTER);
-    root.setBottom(bottomPane);
-
-    // Left panel
-    Pane leftPane = createSidePanel(icons[leftIdx], false, names[leftIdx], colors[leftIdx]);
-    // leftPane.setPrefHeight(WINDOW_SIZE - 80); // Can keep or remove this
-    BorderPane.setAlignment(leftPane, Pos.CENTER);
-    root.setLeft(leftPane);
-
-    // Right panel
-    Pane rightPane = createSidePanel(icons[rightIdx], false, names[rightIdx], colors[rightIdx]);
-    // rightPane.setPrefHeight(WINDOW_SIZE - 80); // Can keep or remove this
-    BorderPane.setAlignment(rightPane, Pos.CENTER);
-    root.setRight(rightPane);
-
-    // Top panel
-    Pane topPane = createSidePanel(icons[topIdx], true, names[topIdx], colors[topIdx]);
-    // topPane.setPrefWidth(WINDOW_SIZE); // Can keep or remove this
-    BorderPane.setAlignment(topPane, Pos.CENTER);
-    root.setTop(topPane);
-
-    // Background
-    root.setStyle(
-        "-fx-background-image: url('/images/tile.png');" +
-        "-fx-background-repeat: repeat repeat;" +
-        "-fx-background-position: center center;"
-    );
-
-    return root;
 }
 
-private static Pane createSidePanel(Image icon, boolean horizontal, String name, String color) {
-        // The placeholder size seems intended for a specific layout.
-        // Making the side panels flexible might require adjusting or removing this.
-        // Let's keep it for now but be aware it might constrain flexibility.
-        double w = 4 * CELL_SIZE, h = CELL_SIZE;
-        Region placeholder = new Region();
-        placeholder.setPrefSize(w, h);
-        placeholder.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE); // Use preferred size as minimum
-        placeholder.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE); // Use preferred size as maximum
-        placeholder.setStyle("-fx-border-color: gray; -fx-border-style: dashed;");
-
-        ImageView iv = new ImageView(icon);
-        iv.setFitWidth(CELL_SIZE * 2);
-        iv.setFitHeight(CELL_SIZE * 2);
-        iv.setPreserveRatio(true);
-
-        Label nameLabel = new Label(name);
-        nameLabel.setWrapText(true);
-        nameLabel.setMaxWidth(CELL_SIZE * 2);
-        nameLabel.setAlignment(Pos.CENTER);
-        nameLabel.setStyle("-fx-font-size: 2em; -fx-text-fill: " + color + ";");
-        nameLabel.setMinHeight(Region.USE_PREF_SIZE); // Prevent label from shrinking too much
-
-        if (horizontal) {
-            VBox iconBox = new VBox(5, iv, nameLabel);
-            iconBox.setAlignment(Pos.CENTER);
-            // Allow the iconBox to take necessary height
-            HBox box = new HBox(10, iconBox, placeholder);
-            box.setAlignment(Pos.CENTER);
-            box.setPadding(new Insets(10));
-            HBox.setHgrow(placeholder, Priority.NEVER); // Placeholder doesn't grow horizontally
-            // Consider adding VBox.setVgrow(iconBox, Priority.SOMETIMES); if vertical flexibility is needed within the HBox
-            return box;
-        } else {
-            VBox box = new VBox(5, iv, nameLabel, placeholder);
-            box.setAlignment(Pos.CENTER);
-            box.setPadding(new Insets(10));
-            // Allow the VBox to take necessary width
-            VBox.setVgrow(placeholder, Priority.NEVER); // Placeholder doesn't grow vertically
-            // Consider adding HBox.setHgrow(iconBox, Priority.SOMETIMES); if horizontal flexibility is needed within the VBox
-            return box;
+    public void setPlayerPanel(Pane panel, PanelPosition position) {
+        switch (position) {
+            case BOTTOM:
+                BorderPane.setAlignment(panel, Pos.CENTER);
+                rootPane.setBottom(panel);
+                break;
+            case LEFT:
+                BorderPane.setAlignment(panel, Pos.CENTER);
+                rootPane.setLeft(panel);
+                break;
+            case RIGHT:
+                BorderPane.setAlignment(panel, Pos.CENTER);
+                rootPane.setRight(panel);
+                break;
+            case TOP:
+                BorderPane.setAlignment(panel, Pos.CENTER);
+                rootPane.setTop(panel);
+                break;
         }
     }
+
+    
+
 }
