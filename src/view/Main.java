@@ -43,60 +43,16 @@ public class Main extends Application {
     }
 
     private void buildGameUI(Stage stage, String playerName) throws IOException {
-        new Game(playerName);
-
-        Image[] icons = new Image[] {
-            new Image(getClass().getResourceAsStream("/images/player_red.png")),
-            new Image(getClass().getResourceAsStream("/images/player_green.png")),
-            new Image(getClass().getResourceAsStream("/images/player_blue.png")),
-            new Image(getClass().getResourceAsStream("/images/player_yellow.png"))
-        };
-        String[] names  = { "Mr. Red", "Mr. Green", "Mr. Blue", "Mr. Yellow" };
-        String[] colors = { "red",      "green",      "blue",      "goldenrod"   };
-        List<Integer> order = Arrays.asList(0, 1, 2, 3);
-        Collections.shuffle(order);
-        Random rnd = new Random();
-        int playerCharIndex = rnd.nextInt(icons.length);
-        names[playerCharIndex] = playerName;
-        int leftIdx   = order.get(0);
-        int topIdx    = order.get(1);
-        int rightIdx  = order.get(2);
-        int bottomIdx = order.get(3);
-
-        GridPane boardGrid = new GridPane();
-        boardGrid.setHgap(2);
-        boardGrid.setVgap(2);
-        boardGrid.setPadding(new Insets(10));
-        boardGrid.setPrefSize(COLS * CELL_SIZE, ROWS * CELL_SIZE);
-        for (int r = 0; r < ROWS; r++) {
-            for (int c = 0; c < COLS; c++) {
-                Pane cell = new Pane();
-                cell.setPrefSize(CELL_SIZE, CELL_SIZE);
-                cell.setStyle("-fx-border-color: black; -fx-background-color: lightgray;");
-                boardGrid.add(cell, c, r);
-            }
-        }
-
-        BorderPane root = new BorderPane();
-        root.setCenter(boardGrid);
-        root.setLeft(  createSidePanel(icons[leftIdx],   false, names[leftIdx],  colors[leftIdx]));
-        root.setTop(   createSidePanel(icons[topIdx],    true,  names[topIdx],   colors[topIdx]));
-        root.setRight( createSidePanel(icons[rightIdx],  false, names[rightIdx], colors[rightIdx]));
-        root.setBottom(createSidePanel(icons[bottomIdx], true,  names[bottomIdx], colors[bottomIdx]));
-
-        root.setStyle(
-            "-fx-background-image: url(\"/images/tile.png\");" +
-            "-fx-background-repeat: repeat repeat;" +
-            "-fx-background-position: center center;"
-        );
-
-        Scene scene = new Scene(root);
+        BorderPane root = BoardView.create(playerName); // <-- Use the static factory method
+        Scene scene = new Scene(root);                  // <-- Use root directly
         stage.setScene(scene);
         stage.sizeToScene();
         stage.setTitle("Jackaroo — Welcome, " + playerName);
         stage.setResizable(false);
         stage.show();
     }
+
+
 
     /**
      * Creates a side panel containing the player's icon, colored name below at double size, and a placeholder.
