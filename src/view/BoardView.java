@@ -580,6 +580,9 @@ public class BoardView {
 	public void drawHomeZones(Board board, Map<Integer, PlayerPanelInfo> playerPanelInfoMap) {
 		double homeSize = 100;
 		double margin = 20; // gap between window edge and home-zone
+		
+		// Load the home zone background image
+		Image homeZoneImage = new Image("/images/homezone.png");
 
 		for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
 			int panelIdx = e.getKey();
@@ -612,11 +615,32 @@ public class BoardView {
 				break;
 			}
 
-			// draw the tinted home-zone rectangle
+			// Create a rectangle with the image background
 			Rectangle rect = new Rectangle(x0, y0, homeSize, homeSize);
-			rect.setStyle(String.format("-fx-fill: %s33; -fx-stroke: %s;", info.cssColor, info.cssColor));
+			
+			// Create background image pattern
+			BackgroundImage bgImage = new BackgroundImage(
+				homeZoneImage,
+				BackgroundRepeat.NO_REPEAT,
+				BackgroundRepeat.NO_REPEAT,
+				BackgroundPosition.DEFAULT,
+				new BackgroundSize(homeSize, homeSize, false, false, false, false)
+			);
+			
+			// Apply the background to the rectangle using CSS
+			rect.setFill(Color.TRANSPARENT);
+			rect.setStyle(String.format("-fx-stroke: %s;", info.cssColor));
 			rect.setStrokeWidth(2);
-			centerPane.getChildren().add(rect);
+			
+			// Create a pane to hold the rectangle with the background image
+			StackPane homeZonePane = new StackPane();
+			homeZonePane.setBackground(new Background(bgImage));
+			homeZonePane.getChildren().add(rect);
+			homeZonePane.setLayoutX(x0);
+			homeZonePane.setLayoutY(y0);
+			homeZonePane.setPrefSize(homeSize, homeSize);
+			
+			centerPane.getChildren().add(homeZonePane);
 
 			// populate the 2×2 starting pieces inside
 			double cell = homeSize / 2;
