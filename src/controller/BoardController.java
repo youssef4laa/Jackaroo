@@ -186,59 +186,33 @@ public class BoardController {
 // Now assign logical players (by their fixed index 0-3) to the shuffled panel positions
 
 		for (int logicalPlayerIdx = 0; logicalPlayerIdx < logicalPlayerIndices.size(); logicalPlayerIdx++) {
-
 // The panelPositionIndex for this logical player is at index logicalPlayerIdx in the shuffled list
-
-			int assignedPanelPositionIndex = panelPositionIndices.get(logicalPlayerIdx);
-
-			BoardView.PanelPosition currentVisualPos = visualPositions[assignedPanelPositionIndex];
-
-			boolean horizontal = isHorizontalLayout[assignedPanelPositionIndex];
-
-			String playerName = defaultNames[logicalPlayerIdx];
-
-			Colour playerColor = playerColours[logicalPlayerIdx]; // Get the actual color enum
-
-// Determine if this logical player is the human player (assuming humanPlayerName matches one of the defaultNames initially)
-
-// A more robust way is to pass the human player's Colour or a player object from Game to the controller.
-
-// For this fix, let's assume the human player's *color* is determined elsewhere or can be matched by name initially.
-
-// Let's stick to matching by name for simplicity based on current code, but be aware of limitations.
-
-			if (playerName.equals(humanPlayerName)) {
-
-// This logical player is the human player
-
-				playerName = humanPlayerName; // Use the provided human player name
-
+int assignedPanelPositionIndex = panelPositionIndices.get(logicalPlayerIdx);
+BoardView.PanelPosition currentVisualPos = visualPositions[assignedPanelPositionIndex];
+boolean horizontal = isHorizontalLayout[assignedPanelPositionIndex];
+			
+			// Randomly select which logical player will be the human player
+			// We'll use the first player in the shuffled list (logicalPlayerIndices.get(0))
+			String playerName;
+			if (logicalPlayerIdx == logicalPlayerIndices.get(0)) {
+				playerName = humanPlayerName; // Use the human player name for the randomly selected player
+			} else {
+				playerName = defaultNames[logicalPlayerIdx]; // Use default names for AI players
 			}
-
+			
+			Colour playerColor = playerColours[logicalPlayerIdx]; // Get the actual color enum
+			
 			panelConfigurations.put(
-
-					assignedPanelPositionIndex, // Key is the assigned visual panel index (0-3)
-
-					new BoardView.PlayerPanelInfo(
-
-							playerIcons[logicalPlayerIdx], // Icon corresponds to the logical player's original color
-															// index
-
-							playerName,
-
-							defaultCssColors[logicalPlayerIdx], // CSS color corresponds to the logical player's
-																// original color index
-
-							currentVisualPos,
-
-							horizontal,
-
-							playerColor // ***Crucially, include the player's game model Colour***
-
-					)
-
+				assignedPanelPositionIndex, // Key is the assigned visual panel index (0-3)
+				new BoardView.PlayerPanelInfo(
+					playerIcons[logicalPlayerIdx], // Icon corresponds to the logical player's original color index
+					playerName,
+					defaultCssColors[logicalPlayerIdx], // CSS color corresponds to the logical player's original color index
+					currentVisualPos,
+					horizontal,
+					playerColor // ***Crucially, include the player's game model Colour***
+				)
 			);
-
 		}
 
 // Ensure the human player (if matched by name) is correctly identified in the configuration
