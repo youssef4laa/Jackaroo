@@ -66,7 +66,7 @@ public class BoardView {
 
 	private double ringRadius = 300;
 
-	private double tileRadius = 12;
+	private double tileRadius = 80;
 
 	private double safeSpacingMultiplier = 2.2;
 
@@ -125,10 +125,8 @@ public class BoardView {
 	}
 
 	/**
-	 * 
-	 * Automatically lay out player panels according to the shuffled quadrant order.
-	 * 
-	 */
+	 * * Automatically lay out player panels according to the shuffled quadrant order.
+	 * */
 
 	private void layoutPlayerPanels(Map<Integer, Pane> panelPanes) {
 
@@ -151,10 +149,8 @@ public class BoardView {
 	}
 
 	/**
-	 * 
-	 * Map shuffled quadrant index (0-3) to a PanelPosition enum.
-	 * 
-	 */
+	 * * Map shuffled quadrant index (0-3) to a PanelPosition enum.
+	 * */
 
 	private PanelPosition mapQuadToPosition(int quad) {
 
@@ -185,10 +181,8 @@ public class BoardView {
 	}
 
 	/**
-	 * 
-	 * Draw the game board and auto-layout player panels.
-	 * 
-	 */
+	 * * Draw the game board and auto-layout player panels.
+	 * */
 
 	public void drawGameBoard(Board board, Map<Integer, PlayerPanelInfo> playerPanelInfoMap,
 
@@ -270,35 +264,43 @@ public class BoardView {
 
 	}
 
-	private Point2D[] drawTrack(List<Cell> trackCells, int totalTrackCells) {
+private Point2D[] drawTrack(List<Cell> trackCells, int totalTrackCells) {
+    // gap you want between circles
+    double spacing = 10;
+    // significantly larger desired tile radius
+    double desiredTileRadius = 20;  // Increased from original value
 
-		Point2D[] trackPts = new Point2D[totalTrackCells];
+    // fixed board radius - use a larger radius to accommodate larger tiles
+    double R = ringRadius;
+    // straight-line distance (chord) between two adjacent centers on your ring
+    double chord = 2 * R * Math.sin(Math.PI / totalTrackCells);
+    // the maximum radius that still leaves 'spacing' px between tiles:
+    double maxFittingRadius = (chord - spacing) / 2;
 
-		for (int i = 0; i < totalTrackCells; i++) {
+    // pick the smaller of your desired size or the fitting size,
+    // but never let them shrink below a visible minimum (e.g. 5px)
+    double actualTileRadius = Math.max(10, Math.min(desiredTileRadius, maxFittingRadius));
+    
+    // Save this radius for consistent tile sizes across track and safe zones
+    tileRadius = actualTileRadius;
 
-			double angle = 2 * Math.PI * i / totalTrackCells;
+    Point2D[] trackPts = new Point2D[totalTrackCells];
+    for (int i = 0; i < totalTrackCells; i++) {
+        double angle = 2 * Math.PI * i / totalTrackCells; 
+        double x = calculatedCenterX + R * Math.cos(angle);
+        double y = calculatedCenterY + R * Math.sin(angle);
 
-			double x = calculatedCenterX + ringRadius * Math.cos(angle);
+        Circle tile = new Circle(x, y, actualTileRadius, Color.BEIGE);
+        tile.setStroke(Color.GRAY);
+        centerPane.getChildren().add(tile);
 
-			double y = calculatedCenterY + ringRadius * Math.sin(angle);
+        trackPts[i] = new Point2D(x, y);
+        cellPositionMap.put(trackCells.get(i), trackPts[i]);
+    }
+    return trackPts;
+}
 
-			trackPts[i] = new Point2D(x, y);
-
-			Circle tile = new Circle(x, y, tileRadius, Color.BEIGE);
-
-			tile.setStroke(Color.GRAY);
-
-			centerPane.getChildren().add(tile);
-
-			cellPositionMap.put(trackCells.get(i), new Point2D(x, y));
-
-		}
-
-		return trackPts;
-
-	}
-
-	private void drawLinks(Point2D[] trackPts) {
+private void drawLinks(Point2D[] trackPts) {
 
 		for (int i = 0; i < trackPts.length; i++) {
 
@@ -324,93 +326,113 @@ public class BoardView {
 
 // for placement.
 
-	public Pane createPlayerPanelUI(Image icon, boolean horizontalLayout, String name, String cssColor) {
+	// Add imports if not already present at the top of your file:
+// import javafx.scene.layout.HBox; // Already present
+// import javafx.scene.image.Image; // Already present
+// import javafx.scene.image.ImageView; // Already present
+// import javafx.scene.shape.Rectangle; // Already present
+// import javafx.scene.Node; // Already present
+// import javafx.scene.paint.Color; // Already present
+// import javafx.geometry.Pos; // Already present
 
-		double placeholderWidth = 4 * CELL_SIZE_FOR_PANELS;
+public Pane createPlayerPanelUI(Image icon,
+                                boolean horizontalLayout,
+                                String name,
+                                String cssColor) {
+    // Icon setup
+    ImageView iv = new ImageView(icon);
+    double iconSize = CELL_SIZE_FOR_PANELS * 1.5;
+    iv.setFitWidth(iconSize);
+    iv.setFitHeight(iconSize);
+    iv.setPreserveRatio(true);
+    StackPane iconPane = new StackPane(iv);
+    iconPane.setPrefSize(iconSize, iconSize);
+    iconPane.setAlignment(Pos.CENTER);
 
-		double placeholderHeight = CELL_SIZE_FOR_PANELS;
+    // Name label
+    Label nameLabel = new Label(name);
+    nameLabel.setWrapText(true);
+    nameLabel.setMaxWidth(CELL_SIZE_FOR_PANELS * 2);
+    nameLabel.setAlignment(Pos.CENTER);
+    nameLabel.setStyle(
+        "-fx-font-size: 1.5em;" +
+        "-fx-text-fill: " + cssColor + ";" +
+        "-fx-font-weight: bold;"
+    );
+    nameLabel.setMinHeight(Region.USE_PREF_SIZE);
 
-		Region placeholder = new Region();
+    // Build the 4-card HBox
+    HBox cardDisplayArea = new HBox(5);
+    cardDisplayArea.setAlignment(Pos.CENTER);
+    double cardH = CELL_SIZE_FOR_PANELS * 0.90;
+    double cardW = cardH * (2.5/3.5);
+    cardDisplayArea.setPrefSize(cardW*4 + 5*3, cardH);
+    cardDisplayArea.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-		placeholder.setPrefSize(placeholderWidth, placeholderHeight);
+    Image back = null;
+    try {
+      back = new Image("/images/card_back.png");
+      if (back.isError()) back = null;
+    } catch (Exception e) {
+      back = null;
+    }
 
-		placeholder.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+    for (int i = 0; i < 4; i++) {
+      Node c;
+      if (back != null) {
+        ImageView cv = new ImageView(back);
+        cv.setFitHeight(cardH);
+        cv.setPreserveRatio(true);
+        c = cv;
+      } else {
+        Rectangle rect = new Rectangle(cardW, cardH);
+        rect.setFill(Color.LIGHTSLATEGREY);
+        rect.setStroke(Color.DARKGRAY);
+        double r = cardH / 8;
+        rect.setArcWidth(r);
+        rect.setArcHeight(r);
+        c = rect;
+      }
+      cardDisplayArea.getChildren().add(c);
+    }
 
-		placeholder.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+    // Icon + name stack
+    VBox nameAndIconBox = new VBox(5, iconPane, nameLabel);
+    nameAndIconBox.setAlignment(Pos.CENTER);
 
-		placeholder.setStyle("-fx-border-color: gray; -fx-border-style: dashed; -fx-background-color: #FFFFFF1A;");
+    Pane layoutPane;
+    if (horizontalLayout) {
+      // If you want the cards on the inside edge, just flip this boolean when you call it:
+      boolean flipOrder = false;
 
-		ImageView iv = new ImageView(icon);
+      HBox box = new HBox(10,
+         flipOrder ? cardDisplayArea : nameAndIconBox,
+         flipOrder ? nameAndIconBox : cardDisplayArea
+      );
+      box.setAlignment(Pos.CENTER);
+      box.setPadding(new Insets(5));
 
-		double iconSize = CELL_SIZE_FOR_PANELS * 1.5;
+      // **Don’t** let the card area grow to fill: keep it at its pref size
+      HBox.setHgrow(cardDisplayArea, Priority.NEVER);
+      HBox.setHgrow(nameAndIconBox, Priority.NEVER);
 
-		iv.setFitWidth(iconSize);
+      layoutPane = box;
+    } else {
+      // vertical layout (for top/bottom players)
+      VBox box = new VBox(5, iconPane, nameLabel, cardDisplayArea);
+      box.setAlignment(Pos.CENTER);
+      box.setPadding(new Insets(5));
 
-		iv.setFitHeight(iconSize);
+      // again, no auto-grow on the card area
+      VBox.setVgrow(cardDisplayArea, Priority.NEVER);
 
-		iv.setPreserveRatio(true);
+      layoutPane = box;
+    }
 
-		Label nameLabel = new Label(name);
+    return layoutPane;
+}
 
-		nameLabel.setWrapText(true);
-
-		nameLabel.setMaxWidth(CELL_SIZE_FOR_PANELS * 2);
-
-		nameLabel.setAlignment(Pos.CENTER);
-
-		nameLabel.setStyle("-fx-font-size: 1.5em; -fx-text-fill: " + cssColor + "; -fx-font-weight: bold;");
-
-		nameLabel.setMinHeight(Region.USE_PREF_SIZE);
-
-		StackPane iconPane = new StackPane(iv);
-
-		iconPane.setPrefSize(iconSize, iconSize);
-
-		iconPane.setAlignment(Pos.CENTER);
-
-		Pane layoutPane;
-
-		if (horizontalLayout) {
-
-			VBox nameAndIconBox = new VBox(5, iconPane, nameLabel);
-
-			nameAndIconBox.setAlignment(Pos.CENTER);
-
-			HBox box = new HBox(10, nameAndIconBox, placeholder);
-
-			box.setAlignment(Pos.CENTER);
-
-			box.setPadding(new Insets(5));
-
-			HBox.setHgrow(placeholder, Priority.ALWAYS);
-
-			HBox.setHgrow(nameAndIconBox, Priority.NEVER);
-
-			box.setPrefHeight(iconSize + nameLabel.getFont().getSize() + 20);
-
-			layoutPane = box;
-
-		} else {
-
-			VBox box = new VBox(5, iconPane, nameLabel, placeholder);
-
-			box.setAlignment(Pos.CENTER);
-
-			box.setPadding(new Insets(5));
-
-			VBox.setVgrow(placeholder, Priority.ALWAYS);
-
-			box.setPrefWidth(iconSize + 20);
-
-			layoutPane = box;
-
-		}
-
-		return layoutPane;
-
-	}
-
-	public enum PanelPosition {
+public enum PanelPosition {
 
 		TOP, BOTTOM, LEFT, RIGHT
 
@@ -459,130 +481,112 @@ public class BoardView {
 	}
 
 	/**
-	 * 
-	 * Draw each player’s safe zone by:
-	 * 
-	 * 1) looking up the shuffled quadrant for that player
-	 * 
-	 * 2) mapping it to a PanelPosition (TOP/BOTTOM/LEFT/RIGHT)
-	 * 
-	 * 3) picking the corresponding track‐cell as the “base”
-	 * 
-	 * 4) stamping circles inward toward center
-	 * 
-	 */
+	 * * Draw each player’s safe zone by:
+	 * * 1) looking up the shuffled quadrant for that player
+	 * * 2) mapping it to a PanelPosition (TOP/BOTTOM/LEFT/RIGHT)
+	 * * 3) picking the corresponding track‐cell as the “base”
+	 * * 4) stamping circles inward toward center
+	 * */
 
-	public void drawSafeZones(Board board, Point2D[] trackPts, Map<Integer, PlayerPanelInfo> playerPanelInfoMap) {
+/**
+ * Draw each player's safe zone with exactly 4 tiles per safe zone
+ * using consistent tile sizes as the main track
+ */
+public void drawSafeZones(Board board, Point2D[] trackPts, Map<Integer, PlayerPanelInfo> playerPanelInfoMap) {
+    final int total = trackPts.length;
+    // Use a consistent spacing between safe zone tiles
+    final double SAFESP = tileRadius * 2.2;
 
-		final int total = trackPts.length;
+    for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
+        int panelIdx = e.getKey();
+        PlayerPanelInfo info = e.getValue();
 
-		final double SAFESP = tileRadius * safeSpacingMultiplier;
+        // 1/2: get shuffled quadrant and map to a compass position
+        PanelPosition pos = mapQuadToPosition(quadrantOrder.get(panelIdx));
 
-		for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
+        // 3: pick the track‐cell index that corresponds to that compass point
+        int baseIdx;
+        switch (pos) {
+        case RIGHT:
+            baseIdx = 0;
+            break;
+        case BOTTOM:
+            baseIdx = total / 4;
+            break;
+        case LEFT:
+            baseIdx = total / 2;
+            break;
+        case TOP:
+            baseIdx = 3 * total / 4;
+            break;
+        default:
+            throw new IllegalStateException();
+        }
 
-			int panelIdx = e.getKey();
+        Point2D base = trackPts[baseIdx];
 
-			PlayerPanelInfo info = e.getValue();
+        // Use colored circle for the base track tile to indicate connection point
+        // No more pure black tile in the safe zone
+        Circle baseTile = new Circle(base.getX(), base.getY(), tileRadius);
+        baseTile.setStyle(String.format("-fx-fill: %s99; -fx-stroke: black;", info.cssColor));
+        centerPane.getChildren().add(baseTile);
 
-// 1/2: get shuffled quadrant and map to a compass position
+        // Calculate direction vector pointing inward toward center
+        Point2D dir = new Point2D(calculatedCenterX - base.getX(),
+                calculatedCenterY - base.getY()).normalize();
 
-			PanelPosition pos = mapQuadToPosition(quadrantOrder.get(panelIdx));
+        Point2D prev = base;
 
-// 3: pick the track‐cell index that corresponds to that compass point
+        Optional<SafeZone> optZ = board.getSafeZones().stream()
+                .filter(z -> z.getColour() == info.playerColor)
+                .findFirst();
 
-			int baseIdx;
+        if (!optZ.isPresent())
+            continue;
 
-			switch (pos) {
+        // Always draw exactly 4 safe zone tiles (limiting to 4 regardless of actual size)
+        // This will handle any size of safe zone in the model, but only display 4 visually
+        int safeTileCount = Math.min(4, optZ.get().getCells().size());
+        
+        for (int i = 0; i < safeTileCount; i++) {
+            Point2D p = base.add(dir.multiply((i + 1) * SAFESP));
 
-			case RIGHT:
-				baseIdx = 0;
-				break;
+            // Create the safe zone tile with the same radius as track tiles
+            Circle c = new Circle(p.getX(), p.getY(), tileRadius);
+            c.setStyle(String.format("-fx-fill: %s66; -fx-stroke: %s;", info.cssColor, info.cssColor));
+            centerPane.getChildren().add(c);
 
-			case BOTTOM:
-				baseIdx = total / 4;
-				break;
+            // Create the connecting line
+            Line spoke = new Line(prev.getX(), prev.getY(), p.getX(), p.getY());
+            spoke.setStyle(String.format("-fx-stroke: %s99;", info.cssColor));
+            centerPane.getChildren().add(spoke);
+            spoke.toBack();
 
-			case LEFT:
-				baseIdx = total / 2;
-				break;
+            // Only map cells that actually exist in the model
+            if (i < optZ.get().getCells().size()) {
+                cellPositionMap.put(optZ.get().getCells().get(i), p);
+            }
 
-			case TOP:
-				baseIdx = 3 * total / 4;
-				break;
-
-			default:
-				throw new IllegalStateException();
-
-			}
-
-			Point2D base = trackPts[baseIdx];
-
-// draw the “base” circle
-
-			Circle baseTile = new Circle(base.getX(), base.getY(), tileRadius);
-
-			baseTile.setStyle(String.format("-fx-fill: %s99; -fx-stroke: black;", info.cssColor));
-
-			centerPane.getChildren().add(baseTile);
-
-// 4: draw the inward “spokes” of safe‐cells
-
-			Point2D dir = new Point2D(calculatedCenterX - base.getX(),
-
-					calculatedCenterY - base.getY()).normalize();
-
-			Point2D prev = base;
-
-			Optional<SafeZone> optZ = board.getSafeZones().stream()
-
-					.filter(z -> z.getColour() == info.playerColor)
-
-					.findFirst();
-
-			if (!optZ.isPresent())
-				continue;
-
-			for (int i = 0; i < optZ.get().getCells().size(); i++) {
-
-				Point2D p = base.add(dir.multiply((i + 1) * SAFESP));
-
-				Circle c = new Circle(p.getX(), p.getY(), tileRadius);
-
-				c.setStyle(String.format("-fx-fill: %s66; -fx-stroke: %s;", info.cssColor, info.cssColor));
-
-				centerPane.getChildren().add(c);
-
-				Line spoke = new Line(prev.getX(), prev.getY(), p.getX(), p.getY());
-
-				spoke.setStyle(String.format("-fx-stroke: %s99;", info.cssColor));
-
-				centerPane.getChildren().add(spoke);
-
-				spoke.toBack();
-
-				cellPositionMap.put(optZ.get().getCells().get(i), p);
-
-				prev = p;
-
-			}
-
-		}
-
-	}
-
-// drawHomeZones logic remains largely correct based on panel position index
+            prev = p;
+        }
+    }
+}
 
 	/**
-	 * 
-	 * Draw each player's 2×2 home square in the corner next to their panel
-	 * 
-	 */
+	 * * Draw each player's 2×2 home square in the corner next to their panel.
+	 * Tiles (cells) are made larger and marbles (pieces) smaller.
+	 * */
 	public void drawHomeZones(Board board, Map<Integer, PlayerPanelInfo> playerPanelInfoMap) {
-		double homeSize = 100;
+		// Increased homeSize to make individual cells larger
+		double homeSize = 80; // Original was 100
 		double margin = 20; // gap between window edge and home-zone
 		
 		// Load the home zone background image
 		Image homeZoneImage = new Image("/images/homezone.png");
+
+		// Define the ratio of the marble's radius to the cell's inner radius (half of cell width)
+		// Reduced from an effective 0.8 to make marbles "much smaller"
+		double marbleToCellRadiusRatio = 0.4; // Original effective was 0.8
 
 		for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
 			int panelIdx = e.getKey();
@@ -628,32 +632,40 @@ public class BoardView {
 			);
 			
 			// Apply the background to the rectangle using CSS
-			rect.setFill(Color.TRANSPARENT);
+			rect.setFill(Color.TRANSPARENT); // Make rectangle fill transparent to see StackPane's background
 			rect.setStyle(String.format("-fx-stroke: %s;", info.cssColor));
 			rect.setStrokeWidth(2);
 			
 			// Create a pane to hold the rectangle with the background image
 			StackPane homeZonePane = new StackPane();
 			homeZonePane.setBackground(new Background(bgImage));
-			homeZonePane.getChildren().add(rect);
+			homeZonePane.getChildren().add(rect); // Add rectangle for border
 			homeZonePane.setLayoutX(x0);
 			homeZonePane.setLayoutY(y0);
-			homeZonePane.setPrefSize(homeSize, homeSize);
+			homeZonePane.setPrefSize(homeSize, homeSize); // Ensure StackPane is sized correctly
 			
 			centerPane.getChildren().add(homeZonePane);
 
 			// populate the 2×2 starting pieces inside
-			double cell = homeSize / 2;
+			// Each cell in the 2x2 grid is now larger due to increased homeSize
+			double cellSize = homeSize / 2; // This is the width/height of one of the 4 cells
 			for (int r = 0; r < 2; r++) {
 				for (int c = 0; c < 2; c++) {
-					double cx = x0 + c * cell + cell / 2;
-					double cy = y0 + r * cell + cell / 2;
-					double pr = (cell / 2) * 0.8;
+					double cellCenterX = x0 + c * cellSize + cellSize / 2;
+					double cellCenterY = y0 + r * cellSize + cellSize / 2;
+					
+					// Calculate piece radius based on the new cellSize and ratio
+					// (cellSize / 2) is the radius of the largest circle that fits in the cell
+					double pieceRadius = (cellSize / 2) * marbleToCellRadiusRatio;
 
-					Circle shadow = new Circle(cx + 2, cy + 2, pr);
+					// Shadow offset can remain fixed or be proportional to pieceRadius
+					double shadowOffsetX = pieceRadius * 0.1; // Example proportional offset
+					double shadowOffsetY = pieceRadius * 0.1;
+
+					Circle shadow = new Circle(cellCenterX + shadowOffsetX, cellCenterY + shadowOffsetY, pieceRadius);
 					shadow.setStyle("-fx-fill: #00000055; -fx-stroke: transparent;");
 
-					Circle piece = new Circle(cx, cy, pr);
+					Circle piece = new Circle(cellCenterX, cellCenterY, pieceRadius);
 					piece.setStyle(String.format(
 							"-fx-fill: %s; -fx-stroke: black; -fx-stroke-width: 1;",
 							info.cssColor));

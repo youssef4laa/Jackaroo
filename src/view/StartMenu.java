@@ -41,6 +41,7 @@ public class StartMenu {
             );
             startMusic = new MediaPlayer(media);
             startMusic.setCycleCount(MediaPlayer.INDEFINITE);
+            startMusic.setVolume(0);
             
             startMusic.play();
         } catch (NullPointerException e) {
