@@ -1,7 +1,3 @@
-/*  ────────────────────────────────────────────────────────────────────────────
- *  CardView.java  (package view)
- *  JavaFX-8-compatible version
- *  ──────────────────────────────────────────────────────────────────────────── */
 package view;
 
 import javafx.beans.property.ObjectProperty;
@@ -13,47 +9,51 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
 import model.card.Card;
 import model.card.standard.Standard;
 
 public class CardView extends StackPane {
 
-    /* ── public read-only property so the controller can bind if desired ── */
-    private final ObjectProperty<Card> cardProperty = new SimpleObjectProperty<>();
+    private static final String CARD_DIR =
+        "file:/Users/youssef/Code/jackaroo/resources/images/cards/";
 
-    private final Rectangle frame       = new Rectangle(100, 140); // constant size
-    private final VBox      faceContainer = new VBox(2);          // rank / suit / name
-    private final ImageView suitIcon      = new ImageView();
-    private       boolean   faceUp        = true;
+    private final ObjectProperty<Card> cardProperty = new SimpleObjectProperty<>();
+    private final Rectangle frame             = new Rectangle(71, 95);
+    private final ImageView cardImageView     = new ImageView();
+    private boolean faceUp = true;
 
     public CardView(Card card) {
+        // set view size & alignment
         setPrefSize(frame.getWidth(), frame.getHeight());
         setAlignment(Pos.CENTER);
 
-        frame.setArcWidth(12);
-        frame.setArcHeight(12);
+        // frame styling
+        frame.setArcWidth(8);
+        frame.setArcHeight(8);
         frame.setStroke(Color.DARKGRAY);
         frame.setStrokeWidth(1.1);
+        frame.setFill(Color.WHITE);
 
-        faceContainer.setAlignment(Pos.CENTER);
+        // image sizing
+        cardImageView.setFitWidth(71);
+        cardImageView.setFitHeight(95);
+        cardImageView.setSmooth(true);
+        cardImageView.setPreserveRatio(false);
 
-        getChildren().addAll(frame, faceContainer);               // order matters
+        // stacking order: white background, then card pic
+        getChildren().addAll(frame, cardImageView);
         setCard(card);
 
-        /* simple hover cue so users know the card is clickable */
+        // hover cursor
         addEventHandler(MouseEvent.MOUSE_ENTERED,
                 e -> setCursor(Cursor.HAND));
         addEventHandler(MouseEvent.MOUSE_EXITED,
                 e -> setCursor(Cursor.DEFAULT));
     }
 
-    /** Changes which card is rendered and refreshes the graphic. */
+    /** Change which card this view should show. */
     public void setCard(Card card) {
         cardProperty.set(card);
         refresh();
@@ -63,7 +63,7 @@ public class CardView extends StackPane {
         return cardProperty;
     }
 
-    /** Flips the card visually (face-up ⇄ face-down). */
+    /** Flip face-up ⇄ face-down. */
     public void setFaceUp(boolean faceUp) {
         if (this.faceUp != faceUp) {
             this.faceUp = faceUp;
@@ -75,39 +75,40 @@ public class CardView extends StackPane {
         return faceUp;
     }
 
-    /* ── private helpers ──────────────────────────────────────────────── */
+    /** Redraws based on current cardProperty and faceUp. */
     private void refresh() {
         Card c = cardProperty.get();
-        faceContainer.getChildren().clear();
 
+        // face-down or no card: show back
         if (c == null || !faceUp) {
-            frame.setFill(Color.DARKRED);          // back of the card
-            suitIcon.setImage(null);
+            cardImageView.setImage(
+                new Image(CARD_DIR + "card_back.png", 71, 95, true, true)
+            );
             return;
         }
 
-        frame.setFill(Color.WHITE);
-
-        Text rankText = new Text();
-        Text nameText = new Text(c.getName());
-        /* “Montserrat” may not exist on every PC; JavaFX will silently fall back */
-        nameText.setFont(Font.font("Montserrat", FontWeight.SEMI_BOLD, 10));
-
-        /* If the engine card is a Standard card we can show rank & suit */
-        if (c instanceof Standard) {               // Java 8-style instanceof
-            Standard std = (Standard) c;           // explicit cast required
-            rankText.setText(String.valueOf(std.getRank()));
-            rankText.setFont(Font.font("Montserrat", FontWeight.BOLD, 14));
-
-            /* Lookup an image according to suit, e.g. “/icons/heart.png” –
-               adjust the path to match your resource layout. */
-            String iconPath = "/icons/" + std.getSuit().name().toLowerCase() + ".png";
-            suitIcon.setImage(new Image(iconPath, 18, 18, true, true));
+        // face-up + Standard card: map to tile###
+        if (c instanceof Standard) {
+            Standard std = (Standard) c;
+            int rank = std.getRank();  // 1..13
+            int base;
+            switch (std.getSuit()) {
+                case HEART:   base =  0; break; // tile000–012
+                case CLUB:    base = 13; break; // tile013–025
+                case DIAMOND: base = 26; break; // tile026–038
+                case SPADE:   base = 39; break; // tile039–051
+                default:      base =  0; break;
+            }
+            int idx = base + (rank - 1);
+            String filename = String.format("tile%03d.png", idx);
+            cardImageView.setImage(
+                new Image(CARD_DIR + filename, 71, 95, true, true)
+            );
         } else {
-            rankText.setText("");                  // wild cards don’t need a rank here
-            suitIcon.setImage(null);
+            // non-standard wild: fallback to back (or provide your own)
+            cardImageView.setImage(
+                new Image(CARD_DIR + "card_back.png", 71, 95, true, true)
+            );
         }
-
-        faceContainer.getChildren().addAll(rankText, suitIcon, nameText);
     }
 }

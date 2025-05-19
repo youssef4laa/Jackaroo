@@ -17,7 +17,7 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 
 import javafx.scene.Node;
-
+import model.card.Card;
 import javafx.scene.control.Label;
 
 import javafx.scene.image.Image;
@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Map;
 
 import java.util.Arrays;
-
+import model.player.*;
 import java.util.Collections;
 
 public class BoardView {
@@ -184,85 +184,62 @@ public class BoardView {
 	 * * Draw the game board and auto-layout player panels.
 	 * */
 
-	public void drawGameBoard(Board board, Map<Integer, PlayerPanelInfo> playerPanelInfoMap,
+public void drawGameBoard(Board board,
+                          Map<Integer, PlayerPanelInfo> playerPanelInfoMap,
+                          Map<Integer, Player> playerMap,
+                          FiredeckView firedeckView) {
+    // 1) clear out any previous drawings
+    centerPane.getChildren().clear();
+    cellPositionMap.clear();
 
-			FiredeckView firedeckView) {
+    // 2) build and position each player's panel using the new createPlayerPanelUI(...)
+    Map<Integer, Pane> panelPanes = new HashMap<>();
+    for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
+        int idx = e.getKey();
+        PlayerPanelInfo info = e.getValue();
+        Player player = playerMap.get(idx);
 
-		centerPane.getChildren().clear(); // Clear previous drawings if any
+        // figure out this panel’s quadrant and orientation
+        int quad = quadrantOrder.get(idx);
+        PanelPosition pos = mapQuadToPosition(quad);
+        boolean horizontal = (pos == PanelPosition.TOP || pos == PanelPosition.BOTTOM);
 
-		cellPositionMap.clear();
+        // now call your updated factory
+        Pane panel = createPlayerPanelUI(
+            info.icon,
+            horizontal,
+            info.name,
+            info.cssColor,
+            player
+        );
+        panelPanes.put(idx, panel);
+    }
+    layoutPlayerPanels(panelPanes);
 
-// First, create and layout player panels based on shuffled quadrants
+    // 3) draw the main circular track with automatic tile‐sizing
+    List<Cell> trackCells = board.getTrack();
+    Point2D[] trackPts = drawTrack(trackCells, trackCells.size());
 
-		Map<Integer, Pane> panelPanes = new HashMap<>();
+    // 4) connect them with lines
+    drawLinks(trackPts);
 
-		for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
+    // 5) draw each player's safe corridor and home corner
+    drawSafeZones(board, trackPts, playerPanelInfoMap);
+    drawHomeZones(board, playerPanelInfoMap);
 
-			PlayerPanelInfo info = e.getValue();
-
-// Orientation: top/bottom panels horizontal, left/right vertical
-
-// But we can derive orientation from the target position
-
-			int quad = quadrantOrder.get(e.getKey());
-
-			PanelPosition pos = mapQuadToPosition(quad);
-
-			boolean horizontal = (pos == PanelPosition.TOP || pos == PanelPosition.BOTTOM);
-
-			Pane panel = createPlayerPanelUI(info.icon, horizontal, info.name, info.cssColor);
-
-			panelPanes.put(e.getKey(), panel);
-
-		}
-
-		layoutPlayerPanels(panelPanes);
-
-// Draw board elements
-
-		final int TRACK_CELLS = board.getTrack().size();
-
-		Point2D[] trackPts = drawTrack(board.getTrack(), TRACK_CELLS);
-
-		drawLinks(trackPts);
-
-		drawSafeZones(board, trackPts, playerPanelInfoMap);
-
-		drawHomeZones(board, playerPanelInfoMap);
-
-// Add FiredeckView to the center
-
-		if (firedeckView != null) {
-
-			double firedeckWidth = firedeckView.getPrefWidth();
-
-			double firedeckHeight = firedeckView.getPrefHeight();
-
-			if (firedeckWidth <= 0 || firedeckHeight <= 0) {
-
-				firedeckWidth = 150;
-
-				firedeckHeight = 100;
-
-				firedeckView.setPrefSize(firedeckWidth, firedeckHeight);
-
-			}
-
-			double firedeckX = calculatedCenterX - firedeckWidth / 2;
-
-			double firedeckY = calculatedCenterY - firedeckHeight / 2;
-
-			firedeckView.setLayoutX(firedeckX);
-
-			firedeckView.setLayoutY(firedeckY);
-
-			centerPane.getChildren().add(firedeckView);
-
-			firedeckView.toFront();
-
-		}
-
-	}
+    // 6) finally, center the FiredeckView if present
+    if (firedeckView != null) {
+        double w = firedeckView.getPrefWidth()  > 0 ? firedeckView.getPrefWidth()  : 150;
+        double h = firedeckView.getPrefHeight() > 0 ? firedeckView.getPrefHeight() : 100;
+        firedeckView.setPrefSize(w, h);
+        firedeckView.relocate(
+            calculatedCenterX - w / 2,
+            calculatedCenterY - h / 2
+        );
+        centerPane.getChildren().add(firedeckView);
+        firedeckView.toFront();
+    }
+}
 
 private Point2D[] drawTrack(List<Cell> trackCells, int totalTrackCells) {
     // gap you want between circles
@@ -334,104 +311,87 @@ private void drawLinks(Point2D[] trackPts) {
 // import javafx.scene.Node; // Already present
 // import javafx.scene.paint.Color; // Already present
 // import javafx.geometry.Pos; // Already present
-
 public Pane createPlayerPanelUI(Image icon,
-                                boolean horizontalLayout,
-                                String name,
-                                String cssColor) {
-    // Icon setup
-    ImageView iv = new ImageView(icon);
-    double iconSize = CELL_SIZE_FOR_PANELS * 1.5;
-    iv.setFitWidth(iconSize);
-    iv.setFitHeight(iconSize);
-    iv.setPreserveRatio(true);
-    StackPane iconPane = new StackPane(iv);
-    iconPane.setPrefSize(iconSize, iconSize);
-    iconPane.setAlignment(Pos.CENTER);
+                                    boolean horizontalLayout,
+                                    String name,
+                                    String cssColor,
+                                    Player player) {
+        // 1) Icon
+        ImageView iv = new ImageView(icon);
+        double iconSize = CELL_SIZE_FOR_PANELS * 1.5;
+        iv.setFitWidth(iconSize);
+        iv.setFitHeight(iconSize);
+        iv.setPreserveRatio(true);
+        StackPane iconPane = new StackPane(iv);
+        iconPane.setPrefSize(iconSize, iconSize);
+        iconPane.setAlignment(Pos.CENTER);
 
-    // Name label
-    Label nameLabel = new Label(name);
-    nameLabel.setWrapText(true);
-    nameLabel.setMaxWidth(CELL_SIZE_FOR_PANELS * 2);
-    nameLabel.setAlignment(Pos.CENTER);
-    nameLabel.setStyle(
-        "-fx-font-size: 1.5em;" +
-        "-fx-text-fill: " + cssColor + ";" +
-        "-fx-font-weight: bold;"
-    );
-    nameLabel.setMinHeight(Region.USE_PREF_SIZE);
+        // 2) Name
+        Label nameLabel = new Label(name);
+        nameLabel.setWrapText(true);
+        nameLabel.setMaxWidth(CELL_SIZE_FOR_PANELS * 2);
+        nameLabel.setAlignment(Pos.CENTER);
+        nameLabel.setStyle(
+            "-fx-font-size: 1.5em;" +
+            "-fx-text-fill: " + cssColor + ";" +
+            "-fx-font-weight: bold;"
+        );
+        nameLabel.setMinHeight(Region.USE_PREF_SIZE);
 
-    // Build the 4-card HBox
-    HBox cardDisplayArea = new HBox(5);
-    cardDisplayArea.setAlignment(Pos.CENTER);
-    double cardH = CELL_SIZE_FOR_PANELS * 0.90;
-    double cardW = cardH * (2.5/3.5);
-    cardDisplayArea.setPrefSize(cardW*4 + 5*3, cardH);
-    cardDisplayArea.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        // 3) Card area: one CardView per card in hand
+        HBox cardDisplayArea = new HBox(5);
+        cardDisplayArea.setAlignment(Pos.CENTER);
+        double cardH = CELL_SIZE_FOR_PANELS * 0.90;
+        double cardW = cardH * (2.5/3.5);
+        List<Card> hand = player.getHand();
+        // size the HBox so it can fit all cards + spacing
+        cardDisplayArea.setPrefSize(
+            cardW * hand.size() + 5 * (hand.size() - 1),
+            cardH
+        );
 
-    Image back = null;
-    try {
-      back = new Image("/images/card_back.png");
-      if (back.isError()) back = null;
-    } catch (Exception e) {
-      back = null;
+        for (Card card : hand) {
+            CardView cv = new CardView(card);
+            cv.setFaceUp(true);
+            // **instead of setFitWidth/Height**, use pref size
+            cv.setPrefSize(cardW, cardH);
+            // ensure it cannot grow beyond that
+            cv.setMaxSize(cardW, cardH);
+            // click handler
+            cv.setOnMouseClicked(e -> {
+                try {
+                    player.selectCard(card);
+                    // TODO: add visual selection highlight
+                } catch (Exception ex) {
+                    // handle invalid selection
+                }
+            });
+            cardDisplayArea.getChildren().add(cv);
+        }
+
+        // 4) Combine icon + name
+        VBox nameAndIconBox = new VBox(5, iconPane, nameLabel);
+        nameAndIconBox.setAlignment(Pos.CENTER);
+
+        // 5) Final layout
+        Pane layoutPane;
+        if (horizontalLayout) {
+            HBox box = new HBox(10, nameAndIconBox, cardDisplayArea);
+            box.setAlignment(Pos.CENTER);
+            box.setPadding(new Insets(5));
+            HBox.setHgrow(cardDisplayArea, Priority.NEVER);
+            HBox.setHgrow(nameAndIconBox, Priority.NEVER);
+            layoutPane = box;
+        } else {
+            VBox box = new VBox(5, iconPane, nameLabel, cardDisplayArea);
+            box.setAlignment(Pos.CENTER);
+            box.setPadding(new Insets(5));
+            VBox.setVgrow(cardDisplayArea, Priority.NEVER);
+            layoutPane = box;
+        }
+
+        return layoutPane;
     }
-
-    for (int i = 0; i < 4; i++) {
-      Node c;
-      if (back != null) {
-        ImageView cv = new ImageView(back);
-        cv.setFitHeight(cardH);
-        cv.setPreserveRatio(true);
-        c = cv;
-      } else {
-        Rectangle rect = new Rectangle(cardW, cardH);
-        rect.setFill(Color.LIGHTSLATEGREY);
-        rect.setStroke(Color.DARKGRAY);
-        double r = cardH / 8;
-        rect.setArcWidth(r);
-        rect.setArcHeight(r);
-        c = rect;
-      }
-      cardDisplayArea.getChildren().add(c);
-    }
-
-    // Icon + name stack
-    VBox nameAndIconBox = new VBox(5, iconPane, nameLabel);
-    nameAndIconBox.setAlignment(Pos.CENTER);
-
-    Pane layoutPane;
-    if (horizontalLayout) {
-      // If you want the cards on the inside edge, just flip this boolean when you call it:
-      boolean flipOrder = false;
-
-      HBox box = new HBox(10,
-         flipOrder ? cardDisplayArea : nameAndIconBox,
-         flipOrder ? nameAndIconBox : cardDisplayArea
-      );
-      box.setAlignment(Pos.CENTER);
-      box.setPadding(new Insets(5));
-
-      // **Don’t** let the card area grow to fill: keep it at its pref size
-      HBox.setHgrow(cardDisplayArea, Priority.NEVER);
-      HBox.setHgrow(nameAndIconBox, Priority.NEVER);
-
-      layoutPane = box;
-    } else {
-      // vertical layout (for top/bottom players)
-      VBox box = new VBox(5, iconPane, nameLabel, cardDisplayArea);
-      box.setAlignment(Pos.CENTER);
-      box.setPadding(new Insets(5));
-
-      // again, no auto-grow on the card area
-      VBox.setVgrow(cardDisplayArea, Priority.NEVER);
-
-      layoutPane = box;
-    }
-
-    return layoutPane;
-}
-
 public enum PanelPosition {
 
 		TOP, BOTTOM, LEFT, RIGHT
