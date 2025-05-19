@@ -2,9 +2,10 @@ package model.card.standard;
 
 import engine.GameManager;
 import engine.board.BoardManager;
-import model.player.Marble;
+
 import java.util.ArrayList;
 import exception.*;
+import model.card.Marble;
 
 public class Three extends Standard {
 

@@ -7,7 +7,6 @@ import engine.board.BoardManager;
 import exception.ActionException;
 import exception.InvalidMarbleException;
 import model.Colour;
-import model.player.Marble;
 
 public abstract class Card {
 	private final String name;

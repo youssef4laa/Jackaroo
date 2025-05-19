@@ -4,7 +4,7 @@ import exception.CannotDiscardException;
 import exception.CannotFieldException;
 import exception.IllegalDestroyException;
 import model.Colour;
-import model.player.Marble;
+import model.card.Marble;
 
 public interface GameManager {
 	public void sendHome(Marble marble);

@@ -1,6 +1,6 @@
 package engine.board;
 
-import model.player.Marble;
+import model.card.Marble;
 
 public class Cell {
     private Marble marble;

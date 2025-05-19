@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import engine.GameManager;
 import engine.board.BoardManager;
-import model.player.Marble;
+import model.card.Marble;
 
 public class Five extends Standard {
 

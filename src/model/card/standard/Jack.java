@@ -7,7 +7,7 @@ import engine.board.BoardManager;
 import exception.ActionException;
 import exception.InvalidMarbleException;
 import model.Colour;
-import model.player.Marble;
+import model.card.Marble;
 
 public class Jack extends Standard {
 

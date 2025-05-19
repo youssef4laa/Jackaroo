@@ -7,25 +7,28 @@ import exception.InvalidCardException;
 import exception.InvalidMarbleException;
 import model.Colour;
 import model.card.Card;
+import model.card.Marble;
 
 @SuppressWarnings("unused")
 public class Player {
     private final String name;
     private final Colour colour;
+    private final int id;
     private ArrayList<Card> hand;
     private final ArrayList<Marble> marbles;
     private Card selectedCard;
 	private final ArrayList<Marble> selectedMarbles;
 
-    public Player(String name, Colour colour) {
+    public Player(String name, Colour colour,int id) {
         this.name = name;
         this.colour = colour;
+        this.id= id;
         this.hand = new ArrayList<>();
         this.selectedMarbles = new ArrayList<>();
         this.marbles = new ArrayList<>();
         
         for (int i = 0; i < 4; i++) {
-            this.marbles.add(new Marble(colour));
+            this.marbles.add(new Marble(colour, id));
         }
         
         //default value

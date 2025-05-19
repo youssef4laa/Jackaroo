@@ -17,6 +17,7 @@ import exception.SplitOutOfRangeException;
 import model.Colour;
 import model.card.Card;
 import model.card.Deck;
+import model.card.Marble;
 import model.player.*;
 
 @SuppressWarnings("unused")
@@ -43,10 +44,10 @@ public class Game implements GameManager {
         Deck.loadCardPool(this.board, (GameManager)this);
         
         this.players = new ArrayList<>();
-        this.players.add(new Player(playerName, colourOrder.get(0)));
+        this.players.add(new Player(playerName, colourOrder.get(0), currentPlayerIndex));
         
         for (int i = 1; i < 4; i++) 
-            this.players.add(new CPU("CPU " + i, colourOrder.get(i), this.board));
+            this.players.add(new CPU("CPU " + i, colourOrder.get(i), currentPlayerIndex, this.board));
         
         for (int i = 0; i < 4; i++) 
             this.players.get(i).setHand(Deck.drawCards());
