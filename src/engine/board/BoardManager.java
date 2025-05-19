@@ -7,7 +7,7 @@ import exception.IllegalDestroyException;
 import exception.IllegalMovementException;
 import exception.IllegalSwapException;
 import exception.InvalidMarbleException;
-import model.player.Marble;
+import model.card.Marble;
 
 public interface BoardManager { 
 	public int getSplitDistance();

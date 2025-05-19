@@ -6,7 +6,7 @@ import engine.GameManager;
 import engine.board.BoardManager;
 import exception.ActionException;
 import exception.InvalidMarbleException;
-import model.player.Marble;
+import model.card.Marble;
 
 public class Seven extends Standard {
 

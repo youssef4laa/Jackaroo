@@ -9,7 +9,7 @@ import exception.IllegalMovementException;
 import exception.IllegalSwapException;
 import exception.InvalidMarbleException;
 import model.Colour;
-import model.player.Marble;
+import model.card.Marble;
 
 @SuppressWarnings("unused")
 public class Board implements BoardManager {

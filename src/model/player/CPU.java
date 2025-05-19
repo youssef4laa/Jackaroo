@@ -7,12 +7,13 @@ import engine.board.BoardManager;
 import exception.GameException;
 import model.Colour;
 import model.card.Card;
+import model.card.Marble;
 
 public class CPU extends Player {
 	private final BoardManager boardManager;
 
-    public CPU(String name, Colour colour, BoardManager boardManager) {
-        super(name, colour);
+    public CPU(String name, Colour colour, int id,BoardManager boardManager) {
+        super(name, colour,id);
         this.boardManager = boardManager;
     }
 

@@ -7,7 +7,7 @@ import engine.board.BoardManager;
 import exception.ActionException;
 import exception.InvalidMarbleException;
 import model.card.Card;
-import model.player.Marble;
+import model.card.Marble;
 
 public class Standard extends Card {
     private final int rank;
