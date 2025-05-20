@@ -557,104 +557,98 @@ public void drawSafeZones(Board board, Point2D[] trackPts, Map<Integer, PlayerPa
 	 * Tiles (cells) are made larger and marbles (pieces) smaller.
 	 * */
 	public void drawHomeZones(Board board, Map<Integer, PlayerPanelInfo> playerPanelInfoMap) {
-		// Increased homeSize to make individual cells larger
-		double homeSize = 80; // Original was 100
-		double margin = 20; // gap between window edge and home-zone
-		
-		// Load the home zone background image
-		Image homeZoneImage = new Image("/images/homezone.png");
+    double homeSize = 80;
+    double margin = 20;
+    Image homeZoneImage = new Image("/images/homezone.png");
+    double marbleToCellRadiusRatio = 0.4;
 
-		// Define the ratio of the marble's radius to the cell's inner radius (half of cell width)
-		// Reduced from an effective 0.8 to make marbles "much smaller"
-		double marbleToCellRadiusRatio = 0.4; // Original effective was 0.8
+    for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
+        int panelIdx = e.getKey();
+        PlayerPanelInfo info = e.getValue();
 
-		for (Map.Entry<Integer, PlayerPanelInfo> e : playerPanelInfoMap.entrySet()) {
-			int panelIdx = e.getKey();
-			PlayerPanelInfo info = e.getValue();
+        PanelPosition pos = mapQuadToPosition(quadrantOrder.get(panelIdx));
+        double x0 = 0, y0 = 0;
+        switch (pos) {
+            case TOP:
+                x0 = margin;
+                y0 = margin;
+                break;
+            case BOTTOM:
+                x0 = windowSize - margin - homeSize;
+                y0 = windowSize - margin - homeSize;
+                break;
+            case LEFT:
+                x0 = margin;
+                y0 = windowSize - margin - homeSize;
+                break;
+            case RIGHT:
+                x0 = windowSize - margin - homeSize;
+                y0 = margin;
+                break;
+        }
 
-			// figure out which corner to place the home zone based on panel position
-			PanelPosition pos = mapQuadToPosition(quadrantOrder.get(panelIdx));
-			double x0 = 0, y0 = 0;
+        // background pane
+        Rectangle rect = new Rectangle(x0, y0, homeSize, homeSize);
+        BackgroundImage bgImage = new BackgroundImage(
+            homeZoneImage,
+            BackgroundRepeat.NO_REPEAT,
+            BackgroundRepeat.NO_REPEAT,
+            BackgroundPosition.DEFAULT,
+            new BackgroundSize(homeSize, homeSize, false, false, false, false)
+        );
+        rect.setFill(Color.TRANSPARENT);
+        rect.setStyle(String.format("-fx-stroke: %s;", info.cssColor));
+        rect.setStrokeWidth(2);
+        StackPane homeZonePane = new StackPane();
+        homeZonePane.setBackground(new Background(bgImage));
+        homeZonePane.getChildren().add(rect);
+        homeZonePane.setLayoutX(x0);
+        homeZonePane.setLayoutY(y0);
+        homeZonePane.setPrefSize(homeSize, homeSize);
+        centerPane.getChildren().add(homeZonePane);
 
-			switch (pos) {
-			case TOP:
-				// Top-left corner
-				x0 = margin;
-				y0 = margin;
-				break;
-			case BOTTOM:
-				// Bottom-right corner
-				x0 = windowSize - margin - homeSize;
-				y0 = windowSize - margin - homeSize;
-				break;
-			case LEFT:
-				// Bottom-left corner
-				x0 = margin;
-				y0 = windowSize - margin - homeSize;
-				break;
-			case RIGHT:
-				// Top-right corner
-				x0 = windowSize - margin - homeSize;
-				y0 = margin;
-				break;
-			}
+        // compute cell size & marble size
+        double cellSize = homeSize / 2;
+        double pieceRadius = (cellSize / 2) * marbleToCellRadiusRatio;
+        String marbleImageName;
+        switch (info.playerColor) {
+            case RED:    marbleImageName = "/images/redMarble.png";    break;
+            case BLUE:   marbleImageName = "/images/blueMarble.png";   break;
+            case YELLOW: marbleImageName = "/images/yellowMarble.png"; break;
+            case GREEN:  marbleImageName = "/images/greenMarble.png";  break;
+            default:     marbleImageName = "/images/greyMarble.png";   break;
+        }
+        Image marbleImg = new Image(marbleImageName);
 
-			// Create a rectangle with the image background
-			Rectangle rect = new Rectangle(x0, y0, homeSize, homeSize);
-			
-			// Create background image pattern
-			BackgroundImage bgImage = new BackgroundImage(
-				homeZoneImage,
-				BackgroundRepeat.NO_REPEAT,
-				BackgroundRepeat.NO_REPEAT,
-				BackgroundPosition.DEFAULT,
-				new BackgroundSize(homeSize, homeSize, false, false, false, false)
-			);
-			
-			// Apply the background to the rectangle using CSS
-			rect.setFill(Color.TRANSPARENT); // Make rectangle fill transparent to see StackPane's background
-			rect.setStyle(String.format("-fx-stroke: %s;", info.cssColor));
-			rect.setStrokeWidth(2);
-			
-			// Create a pane to hold the rectangle with the background image
-			StackPane homeZonePane = new StackPane();
-			homeZonePane.setBackground(new Background(bgImage));
-			homeZonePane.getChildren().add(rect); // Add rectangle for border
-			homeZonePane.setLayoutX(x0);
-			homeZonePane.setLayoutY(y0);
-			homeZonePane.setPrefSize(homeSize, homeSize); // Ensure StackPane is sized correctly
-			
-			centerPane.getChildren().add(homeZonePane);
+        // place 2×2
+        for (int r = 0; r < 2; r++) {
+            for (int c = 0; c < 2; c++) {
+                double cellCenterX = x0 + c * cellSize + cellSize / 2;
+                double cellCenterY = y0 + r * cellSize + cellSize / 2;
 
-			// populate the 2×2 starting pieces inside
-			// Each cell in the 2x2 grid is now larger due to increased homeSize
-			double cellSize = homeSize / 2; // This is the width/height of one of the 4 cells
-			for (int r = 0; r < 2; r++) {
-				for (int c = 0; c < 2; c++) {
-					double cellCenterX = x0 + c * cellSize + cellSize / 2;
-					double cellCenterY = y0 + r * cellSize + cellSize / 2;
-					
-					// Calculate piece radius based on the new cellSize and ratio
-					// (cellSize / 2) is the radius of the largest circle that fits in the cell
-					double pieceRadius = (cellSize / 2) * marbleToCellRadiusRatio;
+                // optional: keep a subtle shadow behind
+                Circle shadow = new Circle(
+                    cellCenterX + pieceRadius * 0.1,
+                    cellCenterY + pieceRadius * 0.1,
+                    pieceRadius
+                );
+                shadow.setStyle("-fx-fill: #00000055; -fx-stroke: transparent;");
+                centerPane.getChildren().add(shadow);
 
-					// Shadow offset can remain fixed or be proportional to pieceRadius
-					double shadowOffsetX = pieceRadius * 0.1; // Example proportional offset
-					double shadowOffsetY = pieceRadius * 0.1;
-
-					Circle shadow = new Circle(cellCenterX + shadowOffsetX, cellCenterY + shadowOffsetY, pieceRadius);
-					shadow.setStyle("-fx-fill: #00000055; -fx-stroke: transparent;");
-
-					Circle piece = new Circle(cellCenterX, cellCenterY, pieceRadius);
-					piece.setStyle(String.format(
-							"-fx-fill: %s; -fx-stroke: black; -fx-stroke-width: 1;",
-							info.cssColor));
-
-					centerPane.getChildren().addAll(shadow, piece);
-				}
-			}
-		}
-	}
+                // image-based marble
+                ImageView marbleView = new ImageView(marbleImg);
+                double diameter = pieceRadius * 2;
+                marbleView.setFitWidth(diameter);
+                marbleView.setFitHeight(diameter);
+                marbleView.setPreserveRatio(true);
+                // center the image
+                marbleView.setLayoutX(cellCenterX - pieceRadius);
+                marbleView.setLayoutY(cellCenterY - pieceRadius);
+                centerPane.getChildren().add(marbleView);
+            }
+        }
+    }
+}
 
 	public void setPlayerPanel(Pane panel, PanelPosition position) {
 
