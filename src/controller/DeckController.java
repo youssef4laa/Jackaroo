@@ -1,101 +1,85 @@
-/* ────────────────────────────────────────────────────────────────────────────
- *  DeckController.java   (package controller)                 Java 8 compatible
- *  ──────────────────────────────────────────────────────────────────────────── */
 package controller;
 
 import java.util.List;
 import java.util.ArrayList;
-
-import engine.GameManager;
-import exception.CannotDiscardException;
+import java.util.function.Consumer;
 import javafx.scene.input.MouseButton;
-import model.Colour;
 import model.card.Card;
 import model.card.Deck;
-import view.CardDeckView;
+import view.DeckView;
 
 /**
- * MVC controller for the draw-pile.
+ * MVC controller for the draw-pile, decoupled from GameManager.
+ * Draws cards directly from the Deck and notifies a handler.
  */
 public class DeckController {
 
     private static final int DRAW_SIZE = 4;
 
-    private final GameManager  game;   // domain logic (interface)
-    private final CardDeckView view;   // graphical stack
+    private final DeckView view;
+    private final Consumer<List<Card>> onDrawCallback;
 
-    public DeckController(GameManager game, CardDeckView view) {
-        this.game = game;
+    /**
+     * @param view            the DeckView component showing the pile
+     * @param onDrawCallback  handler receiving the list of drawn cards
+     */
+    public DeckController(DeckView view, Consumer<List<Card>> onDrawCallback) {
         this.view = view;
+        this.onDrawCallback = onDrawCallback;
 
-        /* show the correct pile height once, then keep it in sync */
+        // Initialize the view count
         refreshCount();
 
-        /* left-click → draw four cards for the active player            */
+        // On click, draw cards and notify handler
         view.setOnMouseClicked(me -> {
             if (me.getButton() == MouseButton.PRIMARY) {
-                drawForCurrentPlayer();
+                drawCardsForHandler();
             }
         });
     }
 
-    /* ── public helpers ─────────────────────────────────────────────── */
-
-    /** Update the number overlay so the UI reflects the true pool size. */
+    /**
+     * Updates the deck view count display.
+     */
     public void refreshCount() {
-        view.setCardCount(Deck.getPoolSize());
+        view.updateCount();
     }
 
-    /** Draws four cards and pushes them into the active player's hand.  */
-    public void drawForCurrentPlayer() {
-        /* validation */
+    /**
+     * Draws DRAW_SIZE cards from the Deck and passes them to the callback.
+     */
+    private void drawCardsForHandler() {
         if (Deck.getPoolSize() < DRAW_SIZE) {
-            showUserError("Not enough cards left in the deck. Refill first.");
+            showUserError("Not enough cards left in the deck. Please refill first.");
             return;
         }
 
         try {
-            /* Draw cards from the deck using the static Deck method */
-            ArrayList<Card> freshlyDrawn = Deck.drawCards();
-            
-            /* Get the active player's color */
-            Colour activeColour = game.getActivePlayerColour();
-            
-            /* Add cards to the player's hand - using the GameManager interface */
-            /* We'll need to modify the GameManager implementation to handle this */
-            for (Card card : freshlyDrawn) {
-                try {
-                    // This assumes the GameManager implementation will handle adding 
-                    // the card to the active player's hand before discarding it
-                    game.discardCard(activeColour);
-                } catch (CannotDiscardException ex) {
-                    showUserError("Failed to add card to player's hand: " + ex.getMessage());
-                }
-            }
-            
-            /* visual bookkeeping */
+            List<Card> drawnCards = Deck.drawCards();
+            onDrawCallback.accept(drawnCards);
             refreshCount();
-            
         } catch (Exception ex) {
             showUserError("Unexpected draw failure: " + ex.getMessage());
         }
     }
 
-    /** Allows the fire-pit to push cards back into the pool. */
-    public void refillFrom(ArrayList<Card> cards) {
-        // Use the static Deck method to refill the pool
-        Deck.refillPool(cards);
+    /**
+     * Refills the Deck pool from a list of cards (e.g., discard pile).
+     */
+    public void refillFrom(List<Card> cards) {
+        Deck.refillPool(new ArrayList<>(cards));
         refreshCount();
     }
 
-    public CardDeckView getView() {
+    /**
+     * Provides access to the view so parent UIs can embed the deck.
+     */
+    public DeckView getView() {
         return view;
     }
 
-    /* ── helpers ─────────────────────────────────────────────────────── */
-
+    // Simple error-reporting hook; replace with your dialog/toast system
     private void showUserError(String message) {
         System.err.println("⚠ " + message);
-        // TODO replace with proper dialog / toast mechanism.
     }
 }

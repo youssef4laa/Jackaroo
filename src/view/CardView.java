@@ -12,6 +12,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import model.card.Card;
+import model.card.wild.*;
 import model.card.standard.Standard;
 
 public class CardView extends StackPane {
@@ -106,6 +107,20 @@ public class CardView extends StackPane {
             );
         } else {
             // non-standard wild: fallback to back (or provide your own)
+        	// inside refresh(), right before the final fallback:
+        	if (c instanceof Burner) {
+        	    cardImageView.setImage(
+        	        new Image(CARD_DIR + "tile052.png", 71, 95, true, true)
+        	    );
+        	    return;
+        	}
+        	if (c instanceof Saver) {
+        	    cardImageView.setImage(
+        	        new Image(CARD_DIR + "tile053.png", 71, 95, true, true)
+        	    );
+        	    return;
+        	}
+
             cardImageView.setImage(
                 new Image(CARD_DIR + "card_back.png", 71, 95, true, true)
             );
