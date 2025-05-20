@@ -15,7 +15,8 @@ import model.Colour;
 import view.BoardView;
 import view.ExceptionPopup;             // ← to show any IO errors loading the FXML      // ← your custom winner‐dialog controller
 import view.FiredeckView;
-import  view.*;
+import view.*;
+import model.card.Deck;
 import java.io.IOException;
 import java.util.*;
 import model.player.Player;
@@ -50,7 +51,7 @@ public class BoardController {
         this.firedeckViewInstance = new FiredeckView();
         this.firedeckController = new FiredeckController(this.game, this.firedeckViewInstance);
         
-        // Initialize deck view
+        // Initialize deck view with stacked card representation
         this.deckViewInstance = new DeckView();
         this.deckController = new DeckController(this.deckViewInstance, cards -> {
             // Handle drawn cards here if needed

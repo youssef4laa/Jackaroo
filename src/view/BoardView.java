@@ -18,7 +18,6 @@ import javafx.geometry.Pos;
 
 import javafx.scene.Node;
 import model.card.Card;
-import view.DeckView;
 import javafx.scene.control.Label;
 
 import javafx.scene.image.Image;
