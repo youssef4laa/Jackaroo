@@ -18,6 +18,7 @@ import javafx.geometry.Pos;
 
 import javafx.scene.Node;
 import model.card.Card;
+import view.DeckView;
 import javafx.scene.control.Label;
 
 import javafx.scene.image.Image;
@@ -187,7 +188,8 @@ public class BoardView {
 public void drawGameBoard(Board board,
                           Map<Integer, PlayerPanelInfo> playerPanelInfoMap,
                           Map<Integer, Player> playerMap,
-                          FiredeckView firedeckView) {
+                          FiredeckView firedeckView,
+                          DeckView deckView) {
     // 1) clear out any previous drawings
     centerPane.getChildren().clear();
     cellPositionMap.clear();
@@ -199,7 +201,7 @@ public void drawGameBoard(Board board,
         PlayerPanelInfo info = e.getValue();
         Player player = playerMap.get(idx);
 
-        // figure out this panel’s quadrant and orientation
+        // figure out this panel's quadrant and orientation
         int quad = quadrantOrder.get(idx);
         PanelPosition pos = mapQuadToPosition(quad);
         boolean horizontal = (pos == PanelPosition.TOP || pos == PanelPosition.BOTTOM);
@@ -227,17 +229,36 @@ public void drawGameBoard(Board board,
     drawSafeZones(board, trackPts, playerPanelInfoMap);
     drawHomeZones(board, playerPanelInfoMap);
 
-    // 6) finally, center the FiredeckView if present
+    // Calculate card dimensions (consistent with createPlayerPanelUI)
+    double cardH_for_decks = CELL_SIZE_FOR_PANELS * 1.5; // Increased height for better visibility
+    double cardW_for_decks = cardH_for_decks * (2.5 / 3.5);
+
+    // Calculate positions to center both components with reduced spacing
+    double spacing = 30; // Reduced spacing between components
+    double totalWidth = (cardW_for_decks * 2) + spacing; // Width of both cards plus spacing
+    double startX = calculatedCenterX - (totalWidth / 2); // Start position to center both components
+
+    // 6) position the FiredeckView if present
     if (firedeckView != null) {
-        double w = firedeckView.getPrefWidth()  > 0 ? firedeckView.getPrefWidth()  : 150;
-        double h = firedeckView.getPrefHeight() > 0 ? firedeckView.getPrefHeight() : 100;
-        firedeckView.setPrefSize(w, h);
+        firedeckView.setPrefSize(cardW_for_decks, cardH_for_decks);
         firedeckView.relocate(
-            calculatedCenterX - w / 2,
-            calculatedCenterY - h / 2
+            startX,
+            calculatedCenterY - cardH_for_decks / 2
         );
         centerPane.getChildren().add(firedeckView);
         firedeckView.toFront();
+    }
+    
+    // 7) position the DeckView next to the firepit if present
+    if (deckView != null) {
+        // Position the deck to the right of the firepit with reduced spacing
+        deckView.setPrefSize(cardW_for_decks, cardH_for_decks);
+        deckView.relocate(
+            startX + cardW_for_decks + spacing,
+            calculatedCenterY - cardH_for_decks / 2
+        );
+        centerPane.getChildren().add(deckView);
+        deckView.toFront();
     }
 }
 

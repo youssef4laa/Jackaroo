@@ -11,8 +11,8 @@ import model.card.standard.Standard; // Assuming Standard is in model.card.stand
 public class FiredeckView extends StackPane {
 
     private ImageView topCardImageView;
-    private static final double CARD_WIDTH = 80; // Adjust as needed
-    private static final double CARD_HEIGHT = 120; // Adjust as needed
+    private static final double CARD_WIDTH =65; // Match CardDeckView size
+    private static final double CARD_HEIGHT = 135; // Match CardDeckView size
     private Image cardBackImage;
 
     public FiredeckView() {
@@ -32,7 +32,7 @@ public class FiredeckView extends StackPane {
         this.getChildren().add(topCardImageView);
         this.setAlignment(Pos.CENTER);
         // Set a preferred size for the FiredeckView itself, can be useful for layout
-        this.setPrefSize(CARD_WIDTH + 20, CARD_HEIGHT + 20); // Adding some padding
+        // Adding some padding
         this.setStyle("-fx-border-color: darkgray; -fx-border-style: dashed; -fx-background-color: #00000033;"); // Visual cue for the area
 
         showEmptyState(); // Initially show card back or empty state

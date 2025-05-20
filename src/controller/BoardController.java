@@ -1,20 +1,27 @@
 package controller;
 
+
 import engine.Game;
 import engine.board.Board;
+import javafx.fxml.FXMLLoader;          // ← new
+import javafx.scene.Parent;             // ← new
+import javafx.scene.Scene;              // ← new
 import javafx.scene.image.Image;
+import javafx.stage.Modality;           // ← new
+import javafx.stage.Stage;              // ← new
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import model.Colour;
 import view.BoardView;
-import model.player.Player;
+import view.ExceptionPopup;             // ← to show any IO errors loading the FXML      // ← your custom winner‐dialog controller
 import view.FiredeckView;
-
+import  view.*;
 import java.io.IOException;
 import java.util.*;
-
+import model.player.Player;
 public class BoardController {
-
+    private DeckView deckViewInstance;
+    private DeckController deckController;
     private Game game;
     private BoardView boardView;
     private FiredeckController firedeckController;
@@ -35,17 +42,23 @@ public class BoardController {
         this.game = new Game(humanPlayerName);
         this.boardView = new BoardView();
         loadPlayerIcons();
-
-        // Create panel configurations
         Map<Integer, BoardView.PlayerPanelInfo> playerPanelConfig =
             createPlayerPanelConfigurations(humanPlayerName);
-
-        // Setup static panels (icon + name); actual board drawing comes later
         setupBoardUI(playerPanelConfig);
 
         // Initialize firedeck
         this.firedeckViewInstance = new FiredeckView();
         this.firedeckController = new FiredeckController(this.game, this.firedeckViewInstance);
+        
+        // Initialize deck view
+        this.deckViewInstance = new DeckView();
+        this.deckController = new DeckController(this.deckViewInstance, cards -> {
+            // Handle drawn cards here if needed
+            Colour winner = game.checkWin();
+            if (winner != null) {
+                showWinnerDialog(winner);
+            }
+        });
 
         // Build a map of index -> Player model
         Map<Integer, Player> playerMap = new HashMap<>();
@@ -54,12 +67,13 @@ public class BoardController {
             playerMap.put(i, players.get(i));
         }
 
-        // Draw the full game board with track, safe zones, home zones, panels, and firedeck
+        // Draw the full game board with track, safe zones, home zones, panels, firedeck and deck
         boardView.drawGameBoard(
             game.getBoard(),
             playerPanelConfig,
             playerMap,
-            firedeckViewInstance
+            firedeckViewInstance,
+            deckViewInstance
         );
     }
 
@@ -145,5 +159,31 @@ public class BoardController {
         if (firedeckController != null) {
             firedeckController.updateFiredeck();
         }
+    }
+    private void showWinnerDialog(Colour winner) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/view/WinnerView.fxml")
+            );
+            Parent root = loader.load();
+            WinnerViewController ctrl = loader.getController();
+            ctrl.setWinner(winner);
+
+            Stage dialog = new Stage();
+            // owner is your main window:
+            dialog.initOwner(boardView.getRootPane().getScene().getWindow());
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setScene(new Scene(root));
+            dialog.setTitle("Game Over!");
+            dialog.showAndWait();
+        } catch (IOException e) {
+            // if FXML fails to load, at least show a popup
+            ExceptionPopup.showException(e);
+        }
+    }
+    private Map<Integer, Player> toPlayerMap(List<Player> players) {
+        Map<Integer, Player> m = new HashMap<>();
+        for (int i = 0; i < players.size(); i++) m.put(i, players.get(i));
+        return m;
     }
 }
