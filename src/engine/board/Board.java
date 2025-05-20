@@ -1,5 +1,6 @@
 package engine.board;
 
+
 import java.util.ArrayList;
 
 import engine.GameManager;
@@ -9,7 +10,9 @@ import exception.IllegalMovementException;
 import exception.IllegalSwapException;
 import exception.InvalidMarbleException;
 import model.Colour;
+import model.card.Card;
 import model.card.Marble;
+import model.player.Player;
 
 @SuppressWarnings("unused")
 public class Board implements BoardManager {
@@ -361,3 +364,4 @@ public class Board implements BoardManager {
     }	
     
 }
+
