@@ -15,7 +15,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 
 import javafx.geometry.Pos;
-import model.player.CPU;
+
 import javafx.scene.Node;
 import model.card.Card;
 import javafx.scene.control.Label;
@@ -332,86 +332,86 @@ private void drawLinks(Point2D[] trackPts) {
 // import javafx.scene.paint.Color; // Already present
 // import javafx.geometry.Pos; // Already present
 public Pane createPlayerPanelUI(Image icon,
-                                boolean horizontalLayout,
-                                String name,
-                                String cssColor,
-                                Player player) {
-    // 1) Icon
-    ImageView iv = new ImageView(icon);
-    double iconSize = CELL_SIZE_FOR_PANELS * 1.5;
-    iv.setFitWidth(iconSize);
-    iv.setFitHeight(iconSize);
-    iv.setPreserveRatio(true);
-    StackPane iconPane = new StackPane(iv);
-    iconPane.setPrefSize(iconSize, iconSize);
-    iconPane.setAlignment(Pos.CENTER);
+                                    boolean horizontalLayout,
+                                    String name,
+                                    String cssColor,
+                                    Player player) {
+        // 1) Icon
+        ImageView iv = new ImageView(icon);
+        double iconSize = CELL_SIZE_FOR_PANELS * 1.5;
+        iv.setFitWidth(iconSize);
+        iv.setFitHeight(iconSize);
+        iv.setPreserveRatio(true);
+        StackPane iconPane = new StackPane(iv);
+        iconPane.setPrefSize(iconSize, iconSize);
+        iconPane.setAlignment(Pos.CENTER);
 
-    // 2) Name
-    Label nameLabel = new Label(name);
-    nameLabel.setWrapText(true);
-    nameLabel.setMaxWidth(CELL_SIZE_FOR_PANELS * 2);
-    nameLabel.setAlignment(Pos.CENTER);
-    nameLabel.setStyle(
-        "-fx-font-size: 1.5em;" +
-        "-fx-text-fill: " + cssColor + ";" +
-        "-fx-font-weight: bold;"
-    );
-    nameLabel.setMinHeight(Region.USE_PREF_SIZE);
+        // 2) Name
+        Label nameLabel = new Label(name);
+        nameLabel.setWrapText(true);
+        nameLabel.setMaxWidth(CELL_SIZE_FOR_PANELS * 2);
+        nameLabel.setAlignment(Pos.CENTER);
+        nameLabel.setStyle(
+            "-fx-font-size: 1.5em;" +
+            "-fx-text-fill: " + cssColor + ";" +
+            "-fx-font-weight: bold;"
+        );
+        nameLabel.setMinHeight(Region.USE_PREF_SIZE);
 
-    // 3) Card area: one CardView per card in hand
-    HBox cardDisplayArea = new HBox(5);
-    cardDisplayArea.setAlignment(Pos.CENTER);
-    double cardH = CELL_SIZE_FOR_PANELS * 0.90;
-    double cardW = cardH * (2.5/3.5);
-    List<Card> hand = player.getHand();
-    cardDisplayArea.setPrefSize(
-        cardW * hand.size() + 5 * (hand.size() - 1),
-        cardH
-    );
+        // 3) Card area: one CardView per card in hand
+        HBox cardDisplayArea = new HBox(5);
+        cardDisplayArea.setAlignment(Pos.CENTER);
+        double cardH = CELL_SIZE_FOR_PANELS * 0.90;
+        double cardW = cardH * (2.5/3.5);
+        List<Card> hand = player.getHand();
+        // size the HBox so it can fit all cards + spacing
+        cardDisplayArea.setPrefSize(
+            cardW * hand.size() + 5 * (hand.size() - 1),
+            cardH
+        );
 
-    // Determine if this is a human player (non-CPU)
-    boolean isHuman = !(player instanceof CPU);
+        for (Card card : hand) {
+            CardView cv = new CardView(card);
+            cv.setFaceUp(true);
+            // **instead of setFitWidth/Height**, use pref size
+            cv.setPrefSize(cardW, cardH);
+            // ensure it cannot grow beyond that
+            cv.setMaxSize(cardW, cardH);
+            // click handler
+            cv.setOnMouseClicked(e -> {
+                try {
+                    player.selectCard(card);
+                    // TODO: add visual selection highlight
+                } catch (Exception ex) {
+                    // handle invalid selection
+                }
+            });
+            cardDisplayArea.getChildren().add(cv);
+        }
 
-    for (Card card : hand) {
-        CardView cv = new CardView(card);
-        // only face up for human player
-        cv.setFaceUp(isHuman);
-        cv.setPrefSize(cardW, cardH);
-        cv.setMaxSize(cardW, cardH);
-        cv.setOnMouseClicked(e -> {
-            try {
-                player.selectCard(card);
-                // TODO: add visual selection highlight
-            } catch (Exception ex) {
-                // handle invalid selection
-            }
-        });
-        cardDisplayArea.getChildren().add(cv);
+        // 4) Combine icon + name
+        VBox nameAndIconBox = new VBox(5, iconPane, nameLabel);
+        nameAndIconBox.setAlignment(Pos.CENTER);
+
+        // 5) Final layout
+        Pane layoutPane;
+        if (horizontalLayout) {
+            HBox box = new HBox(10, nameAndIconBox, cardDisplayArea);
+            box.setAlignment(Pos.CENTER);
+            box.setPadding(new Insets(5));
+            HBox.setHgrow(cardDisplayArea, Priority.NEVER);
+            HBox.setHgrow(nameAndIconBox, Priority.NEVER);
+            layoutPane = box;
+        } else {
+            VBox box = new VBox(5, iconPane, nameLabel, cardDisplayArea);
+            box.setAlignment(Pos.CENTER);
+            box.setPadding(new Insets(5));
+            VBox.setVgrow(cardDisplayArea, Priority.NEVER);
+            layoutPane = box;
+        }
+
+        return layoutPane;
     }
-
-    // 4) Combine icon + name
-    VBox nameAndIconBox = new VBox(5, iconPane, nameLabel);
-    nameAndIconBox.setAlignment(Pos.CENTER);
-
-    // 5) Final layout
-    Pane layoutPane;
-    if (horizontalLayout) {
-        HBox box = new HBox(10, nameAndIconBox, cardDisplayArea);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(5));
-        HBox.setHgrow(cardDisplayArea, Priority.NEVER);
-        HBox.setHgrow(nameAndIconBox, Priority.NEVER);
-        layoutPane = box;
-    } else {
-        VBox box = new VBox(5, iconPane, nameLabel, cardDisplayArea);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(5));
-        VBox.setVgrow(cardDisplayArea, Priority.NEVER);
-        layoutPane = box;
-    }
-
-    return layoutPane;
-}
 public enum PanelPosition {
 
 		TOP, BOTTOM, LEFT, RIGHT
