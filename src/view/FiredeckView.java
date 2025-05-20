@@ -11,17 +11,20 @@ import model.card.standard.Standard; // Assuming Standard is in model.card.stand
 public class FiredeckView extends StackPane {
 
     private ImageView topCardImageView;
-    private static final double CARD_WIDTH =65; // Match CardDeckView size
-    private static final double CARD_HEIGHT = 135; // Match CardDeckView size
+    private static final double CARD_WIDTH =70; // Match CardDeckView size
+    private static final double CARD_HEIGHT = 140; // Match CardDeckView size
     private Image cardBackImage;
+    private Image emptyTileImage;
 
     public FiredeckView() {
         // Load card back image
         try {
             cardBackImage = new Image(getClass().getResourceAsStream("/images/cards/card_back.png"));
+            emptyTileImage = new Image(getClass().getResourceAsStream("/images/empty_tile.png"));
         } catch (NullPointerException e) {
-            System.err.println("Error loading card back image. Make sure '/images/cards/card_back.png' exists.");
-            cardBackImage = null; // Handle missing image gracefully if necessary
+            System.err.println("Error loading images. Make sure card images exist.");
+            cardBackImage = null;
+            emptyTileImage = null;
         }
 
         topCardImageView = new ImageView();
@@ -60,10 +63,10 @@ public class FiredeckView extends StackPane {
     }
 
     public void showEmptyState() {
-        if (cardBackImage != null) {
-            topCardImageView.setImage(cardBackImage); // Show card back when empty
+        if (emptyTileImage != null) {
+            topCardImageView.setImage(emptyTileImage); // Show empty tile when no cards
         } else {
-            topCardImageView.setImage(null); // Or a placeholder for empty
+            topCardImageView.setImage(null); // Fallback if image is missing
         }
     }
 
