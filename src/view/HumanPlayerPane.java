@@ -172,9 +172,4 @@ public class HumanPlayerPane extends BorderPane {
         public String getName(){return name;}
         public String getDescription(){return description;}
     }
-    public static class Marble {
-        private final String id;
-        public Marble(String id){this.id=id;}
-        @Override public String toString(){return id;}
-    }
 }

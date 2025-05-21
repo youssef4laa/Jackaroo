@@ -141,9 +141,9 @@ public class JackarooFinal extends BorderPane {
         this.humanPlayer = game.getPlayers().get(0); // Human player is always first
 
         // Setup shadow effects
-        baseShadow = new DropShadow(10, Color.rgb(0, 0, 0, 0.4));
-        hoverShadow = new DropShadow(8, Color.WHITE);
-        selectionGlow = new DropShadow(10, Color.web("#66ccff"));
+    baseShadow = new DropShadow(10, Color.rgb(0, 0, 0, 0.4));
+    hoverShadow = new DropShadow(8, Color.WHITE);
+    selectionGlow = new DropShadow(20, Color.rgb(0, 255, 0, 0.8));
 
         // Initialize center pane for board
         centerPane = new Pane();
@@ -977,16 +977,27 @@ public class JackarooFinal extends BorderPane {
             if (event.getButton() != MouseButton.PRIMARY)
                 return;
 
-            try {
-                 owner.selectCard(card);
-                 highlight(true);
-                 // Refresh the firedeck view
-                 updateFiredeckView();
-                 // Update turn indicators after playing a card
-                 updateTurnIndicators();
-             } catch (GameException ex) {
-                  highlight(false);
-                  showUserError(ex.getMessage());
+            // Toggle selection state
+            if (getEffect() == selectionGlow) {
+                setEffect(baseShadow);  // Deselect if already selected
+            } else {
+                try {
+                    // Deselect any previously selected card
+                    cardsContainer.getChildren().forEach(node -> {
+                        if (node instanceof CardPane) {
+                            node.setEffect(baseShadow);
+                        }
+                    });
+                    owner.selectCard(card);
+                    highlight(true);
+                    // Refresh the firedeck view
+                    updateFiredeckView();
+                    // Update turn indicators after playing a card
+                    updateTurnIndicators();
+                } catch (GameException ex) {
+                    highlight(false);
+                    showUserError(ex.getMessage());
+                }
             }
         }
 
