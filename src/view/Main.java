@@ -1,6 +1,5 @@
 package view;
-
-import controller.BoardController;      // Import the BoardController
+     // Import the JackarooFinal class instead of BoardController
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -20,7 +19,7 @@ public class Main extends Application {
             try {
                 buildGameUI(primaryStage, playerName);
             } catch (IOException e) {
-                // this really is “cannot continue” — show error then exit
+                // this really is "cannot continue" — show error then exit
                 ExceptionPopup.showError("Startup Error",
                                          "Failed to start game: " + e.getMessage());
                 Platform.exit();
@@ -33,12 +32,11 @@ public class Main extends Application {
     }
 
     private void buildGameUI(Stage stage, String playerName) throws IOException {
-        // instantiate the controller (which builds model+view)
-        BoardController boardController = new BoardController(playerName);
+        // instantiate the JackarooFinal class instead of controller
+        JackarooFinal jackarooGame = new JackarooFinal(playerName);
 
-        // grab its root pane and put it on the stage
-        BorderPane root = boardController.getGameView();
-        Scene scene = new Scene(root);
+        // use the JackarooFinal instance directly as the root pane
+        Scene scene = new Scene(jackarooGame);
         stage.setScene(scene);
         stage.setTitle("Jackaroo — Welcome, " + playerName);
         stage.show();
