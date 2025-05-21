@@ -1,6 +1,8 @@
 package view;
 
+import java.awt.Toolkit;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,6 +55,8 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import model.Colour;
 import model.card.Card;
 import model.card.Deck;
@@ -75,6 +79,7 @@ public class JackarooFinal extends BorderPane {
 
     // Constants
     private static final String CARD_DIR = "file:/Users/youssef/Code/jackaroo/resources/images/cards/";
+    private static final String BG_MUSIC_PATH = "/audio/bgmusic.mp3";
     private static final String DECK_IMAGE_PATH = "/images/deck_back.png";
     private static final double CARD_WIDTH = 71;
     private static final double CARD_HEIGHT = 95;
@@ -122,6 +127,9 @@ public class JackarooFinal extends BorderPane {
 
     // Firedeck components
     private FiredeckView firedeckView;
+    
+    // Background music
+    private MediaPlayer mediaPlayer;
     
     // Turn indicator components
     private Label currentPlayerLabel;
@@ -230,11 +238,35 @@ public class JackarooFinal extends BorderPane {
 
         // Draw the game board with all components
         drawGameBoard(game.getBoard(), playerPanelConfig, playerMap);
+        
+        // Initialize background music
+        initializeBackgroundMusic();
 
         // Initialize the deck count
         updateDeckCount();
         
         // Turn indicator will be placed in the left panel by layoutPlayerPanels
+    }
+
+    /**
+     * Initializes and plays background music.
+     */
+    private void initializeBackgroundMusic() {
+        try {
+            URL musicUrl = getClass().getResource(BG_MUSIC_PATH);
+            if (musicUrl == null) {
+                throw new IOException("Audio file not found at: " + BG_MUSIC_PATH);
+            }
+            Media sound = new Media(musicUrl.toExternalForm());
+            mediaPlayer = new MediaPlayer(sound);
+            mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+            mediaPlayer.setVolume(0.3);
+            mediaPlayer.play();
+        } catch (Exception e) {
+            System.err.println("Error loading background music: " + e.getMessage());
+            // Fallback to system beep if audio fails
+            Toolkit.getDefaultToolkit().beep();
+        }
     }
 
     /**
